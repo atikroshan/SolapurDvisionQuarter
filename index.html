@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quarter Search — Card View</title>
+<style>
+/* --- Modern UI/UX Styles --- */
+body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    background: #f0f2f5; /* Light, modern background */
+    padding: 20px; 
+}
+
+.app-container {
+    max-width: 650px; /* Width set to 650px */
+    margin: 0 auto;
+    background: #ffffff;
+    /* IMPORTANT: Padding is now 25px all around for the content, but 0 at the top since the header handles it */
+    padding: 0 25px 25px 25px; 
+    border-radius: 12px; /* Smoother corners */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* Soft, modern shadow */
+}
+
+/* --- NEW Header Card Style --- */
+.header-card {
+    /* Full width trick: Uses negative margins to span the container width (650px) 
+       despite the 25px side padding of the .app-container. */
+    margin-left: -25px; 
+    margin-right: -25px;
+    width: auto;
+    
+    /* Styling */
+    background: #C00000; /* Pure, strong Red */
+    color: white;
+    padding: 20px 25px; /* Re-apply 25px horizontal padding for text alignment */
+    text-align: center;
+    font-size: 24px;
+    font-weight: 700;
+    text-transform: uppercase;
+    
+    /* Corner Control: Takes the rounded corners from the main app-container */
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    margin-bottom: 15px; /* Space between header and first form field */
+}
+
+h3 {
+    margin: 15px 0 5px;
+    font-size: 14px;
+    color: #444; /* Slightly darker labels */
+    font-weight: 600;
+}
+
+select {
+    width: 100%;
+    padding: 12px 10px;
+    margin-bottom: 15px;
+    border-radius: 8px; /* Rounded inputs */
+    border: 1px solid #ccc;
+    background: #fff;
+    font-size: 16px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    /* Custom arrow for a modern look */
+    -webkit-appearance: none; 
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='%23666' d='M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px top 50%;
+    background-size: 12px;
+}
+select:focus {
+    border-color: #007bff; 
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+    outline: none;
+}
+
+/* --- Summary Counters Styles --- */
+
+/* Only the side-by-side counters use the full width trick now */
+.app-container > .summary-counters {
+    margin-left: -25px;
+    margin-right: -25px;
+}
+
+/* --- TOTAL Counter Styles (Updated) --- */
+.total-summary-box {
+    background: #1877f2; /* Facebook Blue */
+    color: white;
+    /* Standard padding and rounding for 4 sides. 
+       Now respects parent padding and uses 100% of content width. */
+    padding: 15px; 
+    border-radius: 8px; /* Rounded corners on all 4 sides */
+    text-align: center;
+    font-weight: 700;
+    margin-top: 20px; 
+    margin-bottom: 10px; 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: block; /* Ensure it behaves like a block element */
+    width: 100%; 
+    box-sizing: border-box; 
+}
+.total-summary-label {
+    font-size: 14px;
+    opacity: 0.9;
+    margin-bottom: 5px;
+}
+.total-summary-value {
+    font-size: 32px;
+    font-weight: 800;
+}
+/* --- End TOTAL Counter Styles --- */
+
+
+.summary-counters {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    /* Re-apply 25px horizontal padding to align children with form content */
+    padding: 0 25px; 
+    margin: 10px -25px 20px -25px; /* Adjust margin to account for padding shift */
+}
+
+.summary-box {
+    flex-grow: 1;
+    padding: 15px; /* Internal padding remains */
+    border-radius: 8px;
+    text-align: center;
+    color: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+.summary-label {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 5px;
+    opacity: 0.9;
+}
+
+.summary-value {
+    font-size: 28px;
+    font-weight: 800;
+}
+
+/* User Requested Colors: Vacant = Pure Red, Occupied = Green (#27ae60) */
+.red-summary {
+    background: #FF3B30; /* Pure, bright RED for Vacant */
+}
+
+.green-summary {
+    background: #27ae60; /* Green for Occupied */
+}
+/* --- End Summary Counter Styles --- */
+
+
+button {
+    /* Button is a standard, 100% width button inside the card padding. */
+    display: block;
+    width: 100%; 
+    padding: 14px; /* Uniform padding */
+    border-radius: 8px; /* Rounded corners on all 4 sides */
+    border: 0;
+    background: #000000; /* Black for CLEAR button */
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 20px; /* Space it out from the content above */
+    transition: background 0.3s, box-shadow 0.3s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+button:hover {
+    background: #333333; /* Slightly lighter black for hover effect */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+
+/* --- Result Card Styles (Modernized) */
+.results-container {
+    margin-top: 25px;
+    max-width: 650px; /* Width set to 650px */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.result-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 25px; /* Matches internal padding of .app-container for better alignment */
+    margin-bottom: 15px;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+    position: relative;
+    transition: transform 0.2s;
+}
+.result-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.card-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #34495e; /* Dark slate */
+    text-transform: uppercase;
+    margin-right: 10px; 
+}
+
+.card-subtitle {
+    font-size: 13px;
+    color: #7f8c8d; /* Grey text */
+    margin-top: 3px;
+}
+
+.card-badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+}
+
+/* Card badge colors: Vacant = Pure Red, Occupied = Green */
+.badge-vacant { background: #FF3B30; } /* Pure, bright RED */
+.badge-occupied { background: #27ae60; } /* GREEN */
+
+.card-details {
+    font-size: 12px;
+    color: #888;
+    line-height: 1.6;
+    border-top: 1px solid #f0f0f0;
+    padding-top: 10px;
+    margin-top: 10px;
+}
+
+.empty{padding:20px;background:#fff;border-radius:10px;border:1px dashed #e0e0e0;text-align:center;color:#888; margin-top: 25px;}
+</style>
+</head>
+<body>
+
+<div class="app-container">
+    <!-- NEW HEADER CARD -->
+    <div class="header-card">
+        SOLAPUR DIVISION QUARTER SEARCH
+    </div>
+    
+    <h3>Station</h3>
+    <select id="station"></select>
+    
+    <h3>Colony</h3>
+    <select id="colony" disabled></select>
+    
+    <h3>Department</h3>
+    <select id="department" disabled></select>
+    
+    <h3>Building</h3>
+    <select id="building" disabled></select>
+    
+    <h3>Type </h3>
+    <select id="type" disabled></select>
+    
+    <h3>Number</h3>
+    <select id="number" disabled></select>
+    
+    <h3>Floor</h3>
+    <select id="floor" disabled></select>
+
+    <!-- Total Counter (NOW ALWAYS VISIBLE) -->
+    <div id="total-count-container" class="total-summary-box">
+        <div class="total-summary-label">TOTAL RECORDS</div>
+        <div id="total-value" class="total-summary-value">0</div>
+    </div>
+    
+    <!-- Existing Summary Counters (Vacant/Occupied - NOW ALWAYS VISIBLE) -->
+    <div class="summary-counters">
+        <div id="vacant-count" class="summary-box red-summary">
+            <div class="summary-label">VACANT</div>
+            <div class="summary-value">0</div>
+        </div>
+        <div id="occupied-count" class="summary-box green-summary">
+            <div class="summary-label">OCCUPIED</div>
+            <div class="summary-value">0</div>
+        </div>
+    </div>
+    
+    <!-- Button is inside the padding, 100% of the content area, with 4 rounded corners -->
+    <button onclick="clearAll()">CLEAR</button>
+</div>
+
+<div id="results"></div>
+
+<script>
+const csvUrl = "https://docs.google.com/spreadsheets/d/1ZuwyBdel75zj_FMJXHtOa4c5AG86W111YwvEQCje-KM/pub?gid=0&single=true&output=csv";
+
+// COLUMN INDEXES
+const COL = { station:5, colony:6, department:7, building:8, type:9, number:10, floor:11, plinth:12, status:13 };
+const ORDER = ['station','colony','department','building','type','number','floor']; 
+let data = [];
+
+/**
+ * Robust CSV parsing:
+ * - handles quoted fields with commas
+ * - returns array of rows (arrays)
+ * - Skips the first 5 rows (data starts from row 6)
+ */
+function parseCSV(text) {
+  text = text.replace(/\r/g, ''); // normalize
+  const lines = text.split('\n');
+  
+  const rows = [];
+  // Regex for robust CSV parsing, handling quoted strings with inner commas
+  const regex = /(?:"((?:[^"]|"")*)"|([^,]*))(?:,|$)/g;
+
+  // START READING FROM LINE INDEX 5 (ROW 6)
+  for (let i = 5; i < lines.length; i++) {
+    const line = lines[i].trim();
+    // Skip completely empty lines
+    if (!line) continue;
+    
+    const row = [];
+    let match;
+
+    regex.lastIndex = 0;
+    while ((match = regex.exec(line)) !== null) {
+      // PRIMARY SAFETY CHECK: If regex does not advance its position, break immediately.
+      if (match.index === regex.lastIndex) {
+        // This ensures we prevent getting stuck on zero-length matches
+        if (regex.lastIndex < line.length) {
+            regex.lastIndex++; // Manually advance if we are not at the end
+        } else {
+            break; // We are at the end
+        }
+      }
+
+      // match[1] = quoted field (with "" as escaped quotes)
+      // match[2] = unquoted field
+      const raw = (match[1] !== undefined && match[1] !== null) ? match[1].replace(/""/g, '"') : match[2];
+      row.push((raw !== undefined && raw !== null) ? raw.trim() : '');
+
+      // SECONDARY SAFETY CHECK: If row grows too large (e.g., > 30 columns), skip the rest of the row.
+      if (row.length > 30) { 
+        console.error(`CSV Parsing Error: Exceeded 30 columns on line ${i+1}. Skipping this row.`);
+        break; 
+      }
+    }
+    
+    // Only push rows that have enough columns AND contain actual data
+    if (row.length > COL.status && row.some(cell => cell !== '')) {
+      rows.push(row);
+    }
+  }
+  return rows;
+}
+
+/* Load CSV and populate first dropdown */
+async function loadCSV() {
+  try {
+    const res = await fetch(csvUrl);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const txt = await res.text();
+    const rows = parseCSV(txt); 
+
+    // Build data objects with safe access (guard against short rows)
+    data = rows.map(r => ({
+      station: r[COL.station] || '',
+      colony: r[COL.colony] || '',
+      department: r[COL.department] || '',
+      building: r[COL.building] || '',
+      type: r[COL.type] || '',
+      number: r[COL.number] || '',
+      floor: r[COL.floor] || '',
+      plinth: r[COL.plinth] || '',
+      status: r[COL.status] || ''
+    }));
+
+    // Populate the initial 'station' dropdown
+    const stations = getUniqueFilteredValues(data, 'station');
+    populateDropdown('station', stations);
+    
+    // NEW: Show all results and summary counters immediately on load
+    updateSummaryCounters();
+    showResults();
+
+  } catch (err) {
+    console.error('Failed to load CSV:', err);
+    // Display the user-facing error message
+    document.getElementById('results').innerHTML = '<div class="empty">Error loading sheet CSV — please ensure the sheet is published to web as CSV.</div>';
+  }
+}
+
+/**
+ * Populates a select dropdown with options.
+ */
+function populateDropdown(id, items) {
+  const sel = document.getElementById(id);
+  sel.innerHTML = '<option value="">-- Select --</option>';
+  // Filter out plain numbers from primary filter dropdowns like 'station'
+  const isPrimaryFilter = ['station', 'colony', 'department'].includes(id);
+  
+  const filteredItems = items.filter(v => 
+    !isPrimaryFilter || isNaN(v) || v.trim() === '' || isNaN(parseFloat(v))
+  );
+  
+  filteredItems.forEach(v => {
+    const o = document.createElement('option');
+    o.value = v;
+    o.textContent = v;
+    sel.appendChild(o);
+  });
+  sel.disabled = false;
+}
+
+/**
+ * Gets a subset of data filtered by all current selections up to (and including) the currentId.
+ */
+function getFilteredData(currentId) {
+  let res = data.slice();
+  
+  // Iterate through all filter IDs up to the current one ('floor')
+  for (const k of ORDER) {
+    const v = (document.getElementById(k) && document.getElementById(k).value) || '';
+    if (v) {
+      // Filter data based on the selection
+      res = res.filter(r => (r[k] || '').toString().trim().toLowerCase() === v.toString().trim().toLowerCase());
+    }
+    // Stop filtering once we pass the current dropdown ID
+    if (k === currentId) break; 
+  }
+  return res;
+}
+
+/**
+ * Collects unique, sorted, and cleaned values for a specific column key.
+ */
+function getUniqueFilteredValues(dataset, colKey) {
+  // 1. Map to column value, trim whitespace
+  const values = dataset.map(r => (r[colKey]||'').trim());
+
+  // 2. Filter out empty strings and get unique set
+  const uniqueValues = Array.from(new Set(values.filter(Boolean)));
+  
+  // 3. Sort them alphabetically
+  uniqueValues.sort((a,b)=>a.localeCompare(b,'en',{sensitivity:'base'}));
+  
+  return uniqueValues;
+}
+
+/**
+ * Calculates and updates the Total, Vacant, and Occupied summary counters.
+ * This is now called on load and on every filter change.
+ */
+function updateSummaryCounters() {
+    // Determine the current deepest selected filter ID
+    let currentFilterId = ORDER.findLast(id => document.getElementById(id).value !== '');
+
+    // If no filter is selected (initial load or clear), we use the last element 
+    // in the ORDER array to ensure getFilteredData returns ALL records.
+    if (!currentFilterId) {
+        currentFilterId = ORDER[ORDER.length - 1]; 
+    }
+    
+    // Get all data filtered by current selections (or all data if no selections)
+    const subset = getFilteredData(currentFilterId); 
+    
+    let vacantCount = 0;
+    let occupiedCount = 0;
+
+    subset.forEach(r => {
+        if ((r.status || '').toLowerCase().includes('vacant')) {
+            vacantCount++;
+        } else if ((r.status || '').toLowerCase().includes('occupied')) {
+            occupiedCount++;
+        }
+    });
+
+    const totalCount = vacantCount + occupiedCount;
+
+    // Update the displays
+    document.querySelector('#vacant-count .summary-value').textContent = vacantCount;
+    document.querySelector('#occupied-count .summary-value').textContent = occupiedCount;
+    document.getElementById('total-value').textContent = totalCount;
+    
+    // NOTE: Removed conditional display logic. Counters are always shown now.
+}
+
+
+/* When user changes a dropdown, populate the next one and maybe show results */
+function filterNext(currentId) {
+  const curIdx = ORDER.indexOf(currentId);
+  const nextId = ORDER[curIdx + 1];
+
+  // 1. Reset and disable deeper selects
+  for (let i = curIdx + 1; i < ORDER.length; i++) {
+    const id = ORDER[i];
+    const el = document.getElementById(id);
+    if (el) { 
+      el.innerHTML = '<option value="">-- Select --</option>';
+      el.disabled = true; 
+    }
+  }
+  document.getElementById('results').innerHTML = ''; // Clear results until criteria is met
+
+  // 2. Update counters based on current selection
+    updateSummaryCounters(); 
+
+  // 3. If the current selection is empty, we still update the counters and 
+    // show the entire dataset for the highest selected filter level (or show all if nothing is selected)
+    // The previous updateSummaryCounters handles the count. Now we update the results display.
+    if (!document.getElementById('station').value) {
+        // If station is cleared, show all results again
+        showResults(); 
+        return;
+    }
+
+
+  // 4. Populate the next dropdown (if one exists)
+  if (nextId) {
+    // Standard cascading logic: Filter data up to the *current* dropdown's selection
+    const subset = getFilteredData(currentId);
+    const values = getUniqueFilteredValues(subset, nextId);
+    
+    if (values.length) {
+      populateDropdown(nextId, values);
+    } else {
+      const elNext = document.getElementById(nextId);
+      if (elNext) {
+        elNext.innerHTML = '<option value="">-- No options --</option>';
+        elNext.disabled = true;
+      }
+    }
+  }
+    
+  // 5. Show results (Only if 'colony' or deeper is selected) OR if the current filter is the last one in the chain
+  if (ORDER.indexOf(currentId) >= ORDER.indexOf('colony') || currentId === ORDER[ORDER.length - 1] ) {
+    showResults();
+  }
+}
+
+
+/* Show results based on current selections (now a card format) */
+function showResults() {
+  // Filter data up to the last filter in the ORDER array. 
+  // If nothing is selected, getFilteredData will return all data.
+  const rows = getFilteredData(ORDER[ORDER.length - 1]); 
+  const out = document.getElementById('results');
+  out.innerHTML = '';
+  
+  if (!rows.length) {
+    out.innerHTML = '<div class="empty">No matching records found for the selected criteria.</div>';
+    return;
+  }
+  
+    let html = '<div class="results-container">';
+
+    rows.forEach(r => {
+        // Status checks for dynamic badge class
+        const isVacant = (r.status || '').toLowerCase().includes('vacant');
+        const statusText = r.status || 'N/A';
+        
+        // This logic determines the badge class based on the data's status string.
+        // The CSS then colors the badge (Vacant=Red, Occupied=Green)
+        const statusClass = isVacant ? 'badge-vacant' : 'badge-occupied';
+        
+        // Detailed line combining key info
+        const detailedLine = `${r.department || 'N/A'} | ${r.building || 'N/A'} | ${r.type || 'N/A'} | ${r.number || 'N/A'} | ${r.floor || 'N/A'} Floor`;
+
+        html += `
+            <div class="result-card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">${r.station || 'Station N/A'}</div>
+                        <div class="card-subtitle">Colony: ${r.colony || 'N/A'}</div>
+                    </div>
+                    <div class="card-badge ${statusClass}">${statusText}</div>
+                </div>
+                
+                <div class="card-details">
+                    ${detailedLine}
+                </div>
+            </div>
+        `;
+    });
+
+    html += '</div>';
+    out.innerHTML = html;
+}
+
+/* Clear all selections & reset station list */
+function clearAll() {
+  // Reset all dropdowns
+  ORDER.forEach(id => {
+    const sel = document.getElementById(id);
+    if (sel) { 
+      sel.value = ''; // Set value to the initial "-- Select --" option
+      if (id !== 'station') {
+          sel.innerHTML = '<option value="">-- Select --</option>'; 
+          sel.disabled = true; 
+      }
+    }
+  });
+  
+  // Re-enable and re-populate the first dropdown (station)
+  const stations = getUniqueFilteredValues(data, 'station');
+  populateDropdown('station', stations);
+  
+  // Reset the display to show ALL data (as requested for the default view)
+  updateSummaryCounters(); 
+  showResults();
+}
+
+/* Wire events for cascading */
+function wireEvents() {
+  // Helper function to create the change handler for all elements
+  const createHandler = (currentId) => () => filterNext(currentId);
+  
+  // Attach handlers to all elements in the new ORDER array
+  ORDER.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('change', createHandler(id));
+    }
+  });
+}
+
+/* init */
+wireEvents();
+loadCSV();
+</script>
+
+</body>
+</html>
