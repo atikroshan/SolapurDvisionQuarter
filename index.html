@@ -15,6 +15,7 @@
 body { 
     font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
     background: #f0f2f5; 
+    /* Default desktop padding */
     padding: 0 20px 20px 20px; 
     min-height: 200vh; 
 }
@@ -188,24 +189,19 @@ button:hover {
 /* * --- TIER 3 STANDARD HEADER (The Royal Blue Row) --- */
 .table-header {
     grid-column: 1 / -1; 
-    /* grid-row: 1 / 2; <-- REMOVED, as it can conflict with position: sticky */
     display: grid; 
     grid-template-columns: 1.2fr 1.2fr 1fr 1fr 1fr 1fr 1fr 1fr; 
-    /* Removed background-color here as it's set directly on .header-cell for visibility */
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); 
     
-    /* ADDED FOR STICKY BEHAVIOR */
+    /* STICKY BEHAVIOR */
     position: sticky;
-    /* FIX: Position immediately below the fixed bar, and use padding-top for the gap */
     top: var(--fixed-header-height); 
-    /* FIX: Use the page background color to obscure scrolling content in the gap */
     background-color: #f0f2f5; 
-    padding-top: 10px; /* Re-applied the requested 10px gap as internal padding */
+    padding-top: 10px; 
     
-    z-index: 50; /* Above table rows (default is 0) but below main fixed header (100) */
+    z-index: 50; 
     border-top-left-radius: 0; 
     border-top-right-radius: 0; 
-    /* END MODIFIED */
 }
 
 .table-row { display: contents; }
@@ -260,44 +256,51 @@ button:hover {
     font-weight: 700;
 }
 
-/* Mobile Responsiveness: Scrollable table on small screens */
+/* Mobile Responsiveness: Make the table fit the screen instead of scrolling horizontally */
 @media (max-width: 680px) {
-    /* Fixed header group to full width */
+    /* Tighten body padding for mobile screens */
+    body {
+        padding: 0 15px 15px 15px;
+    }
+
+    /* Fixed header group to full width based on new 15px body padding */
     .sticky-header-group-outer {
-        width: 100%; 
-        left: 0; 
-        transform: translateX(0); 
+        width: calc(100% - 30px); 
+        left: 50%; 
+        transform: translateX(-50%); 
     }
     
-    /* Ensure body padding is respected */
+    /* Ensure header padding is consistent with the new body padding */
     .summary-counters-bar, .header-title-bar {
         padding-left: 15px;
         padding-right: 15px;
     }
 
-    /* Wrap results in a scroll container */
+    /* Remove the scroll container functionality entirely by allowing the grid to shrink */
     #results-scroll-container {
-        overflow-x: auto;
+        overflow-x: hidden; /* Prevent horizontal scroll */
+        /* IMPORTANT: Remove min-width override for the table */
     }
     
+    /* The global `display: grid` and `grid-template-columns` now take over. */
     .results-table {
-        display: block; /* Disable CSS Grid for scroll view */
-        min-width: 700px; /* Force minimum width to enable horizontal scroll */
+        min-width: unset; 
+        display: grid; /* Explicitly ensure grid is used */
     }
 
-    .table-header, .table-row {
-        display: flex;
-        /* Flex basis used to distribute widths in the scrollable view */
-        /* Use the same flex values as grid fractions: 1.2fr 1.2fr 1fr x 6 */
-        /* Station, Colony, Dept, Building, Type, Number, Floor, Status */
-        & > :nth-child(1), & > :nth-child(2) { flex: 1.2 0 0; }
-        & > :nth-child(3), & > :nth-child(4), & > :nth-child(5), & > :nth-child(6), & > :nth-child(7), & > :nth-child(8) { flex: 1 0 0; }
-    }
-    
-    /* If we remove sticky from the grid header, we should also remove it here for consistency */
     .table-header {
-        position: static; /* Reset from sticky on mobile, allowing horizontal scroll */
-        left: 0; 
+        position: sticky; /* Ensure sticky remains active */
+    }
+
+    /* Reduce font size and padding inside cells to fit all 8 columns on a small screen */
+    .table-cell {
+        font-size: 10px;
+        padding: 6px 3px;
+    }
+    .header-cell {
+        font-size: 9px;
+        padding: 8px 3px;
+        /* The grid column definitions will scale proportionally */
     }
 }
 
