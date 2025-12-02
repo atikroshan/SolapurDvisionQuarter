@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quarter Search — Table View</title>
+<style>
+/* Define a CSS variable for the exact height of the fixed header group (Tiers 1 & 2) */
+:root {
+    /* Set height to 135px based on current padding/font sizes */
+    --fixed-header-height: 135px; 
+}
+
+/* --- Base & Layout Styles --- */
+body { 
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    background: #f0f2f5; 
+    padding: 0 20px 20px 20px; 
+    min-height: 200vh; 
+}
+
+/* --- Tiers 1 & 2 Sticky Group (PERMANENTLY fixed) --- */
+.sticky-header-group-outer {
+    max-width: 650px; 
+    margin: 0 auto;
+    position: fixed; 
+    top: 0; 
+    left: 50%; 
+    transform: translateX(-50%); 
+    width: calc(100% - 40px);
+    box-sizing: border-box;
+    z-index: 100; /* Fixed elements should have high Z-index */
+    background: #fff;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    overflow: hidden; 
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* Added shadow for better separation */
+}
+
+/* --- TIER 1: Title Bar (Royal Blue) --- */
+.header-title-bar {
+    background: #4169E1; /* Changed from red to Royal Blue */
+    color: white;
+    padding: 15px 25px; 
+    text-align: center;
+    font-size: 22px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* --- TIER 2: Counters Section (Summary Bar) */
+.summary-counters-bar {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 25px 15px 25px; 
+    background: #fff; 
+    border-bottom: 1px solid #eee; 
+}
+
+/* * --- Filter Card Wrapper (Flow Adjustment) --- 
+ * Pushes the rest of the content down precisely by the fixed header height variable.
+ */
+.sticky-filter-wrapper {
+    max-width: 650px; 
+    margin: 0 auto;
+    /* Uses the CSS variable for perfect gap removal */
+    margin-top: var(--fixed-header-height); 
+}
+
+/* --- Card Content (The white filter box) --- */
+.app-container {
+    background: #ffffff;
+    padding: 25px; 
+    border-radius: 12px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); 
+    position: relative;
+    z-index: 5;
+}
+
+/* --- General Filter/Input Styles --- */
+label {
+    display: block;
+    margin: 15px 0 5px;
+    font-size: 14px;
+    color: #444;
+    font-weight: 600;
+}
+
+select {
+    width: 100%;
+    padding: 12px 10px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    background: #fff;
+    font-size: 16px;
+    transition: border-color 0.3s, box-shadow 0.3s, background-color 0.3s;
+    -webkit-appearance: none; 
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='%23666' d='M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px top 50%;
+    background-size: 12px;
+}
+select:focus {
+    border-color: #007bff; 
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+    outline: none;
+}
+
+/* New: Styling for disabled selects */
+select:disabled {
+    background-color: #f7f7f7;
+    color: #999;
+    cursor: not-allowed;
+    border-color: #eee;
+}
+
+
+/* --- Summary Counter Specific Styles --- */
+.summary-box {
+    flex-grow: 1;
+    flex-basis: 0;
+    padding: 10px 5px;
+    border-radius: 8px;
+    text-align: center;
+    color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    min-width: 0; 
+}
+.summary-label {
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 3px;
+    opacity: 0.9;
+    white-space: nowrap;
+}
+.summary-value {
+    font-size: 20px;
+    font-weight: 800;
+}
+.blue-summary { background: #1877f2; }
+.red-summary { background: #FF3B30; }
+.green-summary { background: #27ae60; }
+
+button {
+    display: block;
+    width: 100%; 
+    padding: 14px;
+    border-radius: 8px;
+    border: 0;
+    background: #000000;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background 0.3s, box-shadow 0.3s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+button:hover {
+    background: #333333;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+
+/* --- TABLE/GRID Layout Styles --- */
+#results {
+    max-width: 650px; 
+    margin: 25px auto 0;
+}
+
+.results-table {
+    display: grid;
+    /* 8 columns: 2 wide columns + 6 standard columns */
+    grid-template-columns: 1.2fr 1.2fr 1fr 1fr 1fr 1fr 1fr 1fr; 
+    gap: 1px;
+    background-color: #e0e0e0; 
+    border-radius: 10px;
+    /* Removed overflow: hidden; to allow position: sticky to work relative to viewport */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+/* * --- TIER 3 STANDARD HEADER (The Royal Blue Row) --- */
+.table-header {
+    grid-column: 1 / -1; 
+    /* grid-row: 1 / 2; <-- REMOVED, as it can conflict with position: sticky */
+    display: grid; 
+    grid-template-columns: 1.2fr 1.2fr 1fr 1fr 1fr 1fr 1fr 1fr; 
+    /* Removed background-color here as it's set directly on .header-cell for visibility */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); 
+    
+    /* ADDED FOR STICKY BEHAVIOR */
+    position: sticky;
+    /* FIX: Position immediately below the fixed bar, and use padding-top for the gap */
+    top: var(--fixed-header-height); 
+    /* FIX: Use the page background color to obscure scrolling content in the gap */
+    background-color: #f0f2f5; 
+    padding-top: 10px; /* Re-applied the requested 10px gap as internal padding */
+    
+    z-index: 50; /* Above table rows (default is 0) but below main fixed header (100) */
+    border-top-left-radius: 0; 
+    border-top-right-radius: 0; 
+    /* END MODIFIED */
+}
+
+.table-row { display: contents; }
+.table-cell {
+    padding: 12px 8px;
+    font-size: 13px;
+    text-align: center;
+    background-color: #fff;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    /* Ensure no text selection on mobile devices */
+    user-select: none;
+    -webkit-user-select: none;
+}
+.header-cell {
+    /* New Styling: White text and Royal Blue background */
+    color: white; 
+    background-color: #4169E1; /* Changed from dark gray to Royal Blue */
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 15px 8px;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    /* Added white vertical divider as requested */
+    border-right: 2px solid white; 
+}
+
+/* New: Apply border radius directly to the cells to respect the new padding */
+.table-header .header-cell:first-child {
+    border-top-left-radius: 10px;
+}
+.table-header .header-cell:last-child {
+    border-top-right-radius: 10px;
+    /* Remove the right border from the last column */
+    border-right: none; 
+}
+
+.table-row > .table-cell {
+    font-weight: 500;
+    color: #34495e;
+}
+.odd-row > .table-cell { background-color: #f9f9f9; }
+.status-vacant {
+    background-color: #FFDBDA !important; 
+    color: #C00000;
+    font-weight: 700;
+}
+.status-occupied {
+    background-color: #DAFFE8 !important; 
+    color: #1a7c47; 
+    font-weight: 700;
+}
+
+/* Mobile Responsiveness: Scrollable table on small screens */
+@media (max-width: 680px) {
+    /* Fixed header group to full width */
+    .sticky-header-group-outer {
+        width: 100%; 
+        left: 0; 
+        transform: translateX(0); 
+    }
+    
+    /* Ensure body padding is respected */
+    .summary-counters-bar, .header-title-bar {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+    /* Wrap results in a scroll container */
+    #results-scroll-container {
+        overflow-x: auto;
+    }
+    
+    .results-table {
+        display: block; /* Disable CSS Grid for scroll view */
+        min-width: 700px; /* Force minimum width to enable horizontal scroll */
+    }
+
+    .table-header, .table-row {
+        display: flex;
+        /* Flex basis used to distribute widths in the scrollable view */
+        /* Use the same flex values as grid fractions: 1.2fr 1.2fr 1fr x 6 */
+        /* Station, Colony, Dept, Building, Type, Number, Floor, Status */
+        & > :nth-child(1), & > :nth-child(2) { flex: 1.2 0 0; }
+        & > :nth-child(3), & > :nth-child(4), & > :nth-child(5), & > :nth-child(6), & > :nth-child(7), & > :nth-child(8) { flex: 1 0 0; }
+    }
+    
+    /* If we remove sticky from the grid header, we should also remove it here for consistency */
+    .table-header {
+        position: static; /* Reset from sticky on mobile, allowing horizontal scroll */
+        left: 0; 
+    }
+}
+
+.empty{padding:20px;background:#fff;border-radius:10px;border:1px dashed #e0e0e0;text-align:center;color:#888; margin-top: 25px;}
+</style>
+</head>
+<body>
+
+<!-- START: Tiers 1 & 2 Fixed Group (Always visible at the top) -->
+<div class="sticky-header-group-outer">
+    <div class="sticky-header-group"> 
+        
+        <!-- TIER 1: Title Bar (Royal Blue) -->
+        <div class="header-title-bar">
+            SOLAPUR DIVISION QUARTER SEARCH
+        </div>
+        
+        <!-- TIER 2: Counters Section (Summary Bar) -->
+        <div class="summary-counters-bar"> 
+            
+            <!-- Total Counter (Blue) -->
+            <div id="total-count-container" class="summary-box blue-summary">
+                <div class="summary-label">TOTAL</div>
+                <div id="total-value" class="summary-value">0</div>
+            </div>
+            
+            <!-- Vacant Counter (Red) -->
+            <div id="vacant-count" class="summary-box red-summary">
+                <div class="summary-label">VACANT</div>
+                <div id="vacant-value" class="summary-value">0</div>
+            </div>
+            
+            <!-- Occupied Counter (Green) -->
+            <div id="occupied-count" class="summary-box green-summary">
+                <div class="summary-label">OCCUPIED</div>
+                <div id="occupied-value" class="summary-value">0</div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- END: Tiers 1 & 2 Fixed Group -->
+
+
+<!-- Filter Card Wrapper (Pushed down 135px to start after the fixed header) -->
+<div class="sticky-filter-wrapper">
+    <div class="app-container">
+        
+        <!-- Filters start here (Updated to use <label> for accessibility) -->
+        
+        <label for="station">Station</label>
+        <select id="station" name="station"></select>
+        
+        <label for="colony">Colony</label>
+        <select id="colony" name="colony" disabled></select>
+        
+        <label for="department">Department</label>
+        <select id="department" name="department" disabled></select>
+        
+        <label for="building">Building</label>
+        <select id="building" name="building" disabled></select>
+        
+        <label for="type">Type</label>
+        <select id="type" name="type" disabled></select>
+        
+        <label for="number">Number</label>
+        <select id="number" name="number" disabled></select>
+        
+        <label for="floor">Floor</label>
+        <select id="floor" name="floor" disabled></select>
+
+        <button id="clear-button">CLEAR</button>
+    </div>
+</div>
+
+<div id="results"></div>
+
+<script>
+const csvUrl = "https://docs.google.com/spreadsheets/d/1ZuwyBdel75zj_FMJXHtOa4c5AG86W111YwvEQCje-KM/pub?gid=0&single=true&output=csv";
+
+// COLUMN INDEXES (Verified against original)
+const COL = { station:5, colony:6, department:7, building:8, type:9, number:10, floor:11, plinth:12, status:13 };
+const ORDER = ['station','colony','department','building','type','number','floor']; 
+let data = [];
+
+/**
+ * Robust CSV parsing:
+ * - handles quoted fields with commas
+ * - returns array of rows (arrays)
+ * - Skips the first 5 rows (data starts from row 6)
+ */
+function parseCSV(text) {
+    // Original robust implementation preserved
+    text = text.replace(/\r/g, ''); 
+    const lines = text.split('\n');
+    
+    const rows = [];
+    const regex = /(?:"((?:[^"]|"")*)"|([^,]*))(?:,|$)/g;
+
+    for (let i = 5; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        
+        const row = [];
+        let match;
+
+        regex.lastIndex = 0;
+        while ((match = regex.exec(line)) !== null) {
+             // Safety check: break if stuck
+            if (match.index === regex.lastIndex) {
+                 if (regex.lastIndex < line.length) { regex.lastIndex++; } else { break; }
+            }
+
+            const raw = (match[1] !== undefined && match[1] !== null) ? match[1].replace(/""/g, '"') : match[2];
+            row.push((raw !== undefined && raw !== null) ? raw.trim() : '');
+
+            // Ensure columns don't explode (e.g., in case of bad formatting)
+            if (row.length > 30) { 
+                console.warn(`CSV Parsing: Too many columns on line ${i+1}. Skipping rest of row.`);
+                break; 
+            }
+        }
+        
+        // Only push rows that have enough columns AND contain actual data
+        if (row.length > COL.status && row.some(cell => cell !== '')) {
+            rows.push(row);
+        }
+    }
+    return rows;
+}
+
+/* Load CSV and populate first dropdown */
+async function loadCSV() {
+    try {
+        const res = await fetch(csvUrl);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const txt = await res.text();
+        const rows = parseCSV(txt); 
+
+        // Map raw data array to objects for easier access
+        data = rows.map(r => ({
+            station: r[COL.station] || '',
+            colony: r[COL.colony] || '',
+            department: r[COL.department] || '',
+            building: r[COL.building] || '',
+            type: r[COL.type] || '',
+            number: r[COL.number] || '',
+            floor: r[COL.floor] || '',
+            plinth: r[COL.plinth] || '',
+            status: r[COL.status] || ''
+        }));
+
+        // Populate the initial 'station' dropdown and enable it
+        const stations = getUniqueFilteredValues(data, 'station');
+        populateDropdown('station', stations);
+        document.getElementById('station').disabled = false;
+        
+        // Show all results and summary counters immediately on load
+        updateSummaryCounters();
+        showResults();
+
+    } catch (err) {
+        console.error('Failed to load CSV:', err);
+        // Display user-facing error message
+        document.getElementById('results').innerHTML = '<div class="empty">Error loading sheet CSV. Please ensure the Google Sheet is published to web as CSV and the link is correct.</div>';
+    }
+}
+
+/**
+ * Populates a select dropdown with options.
+ */
+function populateDropdown(id, items) {
+    const sel = document.getElementById(id);
+    // Preserve current selection if it exists in the new list, otherwise reset
+    const currentValue = sel.value; 
+    
+    sel.innerHTML = '<option value="">-- Select --</option>';
+    
+    items.forEach(v => {
+        const o = document.createElement('option');
+        o.value = v;
+        o.textContent = v;
+        sel.appendChild(o);
+    });
+    
+    // Attempt to restore the previous value
+    if (items.includes(currentValue)) {
+        sel.value = currentValue;
+    } else {
+        sel.value = ''; // Reset if old value is not in new list
+    }
+    
+    sel.disabled = items.length === 0;
+}
+
+/**
+ * Gets a subset of data filtered by all current selections up to the last one.
+ */
+function getFilteredData() {
+    let res = data.slice();
+    
+    // Iterate through all filter IDs
+    for (const k of ORDER) {
+        // Get the value from the element, or empty string if not found/selected
+        const v = (document.getElementById(k) && document.getElementById(k).value) || '';
+        
+        if (v) {
+            // Filter data based on the selection (case-insensitive, trimmed comparison)
+            res = res.filter(r => (r[k] || '').toString().trim().toLowerCase() === v.toString().trim().toLowerCase());
+        }
+    }
+    return res;
+}
+
+/**
+ * Collects unique, sorted, and cleaned values for a specific column key from a dataset.
+ */
+function getUniqueFilteredValues(dataset, colKey) {
+    // 1. Map to column value, trim whitespace
+    const values = dataset.map(r => (r[colKey]||'').trim());
+
+    // 2. Filter out empty strings and get unique set
+    const uniqueValues = Array.from(new Set(values.filter(Boolean)));
+    
+    // 3. Sort them alphabetically
+    uniqueValues.sort((a,b)=>a.localeCompare(b,'en',{sensitivity:'base'}));
+    
+    return uniqueValues;
+}
+
+/**
+ * Calculates and updates the Total, Vacant, and Occupied summary counters based on all current filters.
+ */
+function updateSummaryCounters() {
+    // Get all data filtered by current selections (or all data if no selections)
+    const subset = getFilteredData(); 
+    
+    let vacantCount = 0;
+    let occupiedCount = 0;
+
+    subset.forEach(r => {
+        const status = (r.status || '').toLowerCase();
+        if (status.includes('vacant')) {
+            vacantCount++;
+        } else if (status.includes('occupied')) {
+            occupiedCount++;
+        }
+    });
+
+    const totalCount = vacantCount + occupiedCount;
+
+    // Update the displays
+    document.getElementById('total-value').textContent = totalCount;
+    document.getElementById('vacant-value').textContent = vacantCount; 
+    document.getElementById('occupied-value').textContent = occupiedCount;
+}
+
+
+/* When user changes a dropdown, propagate the filter effect */
+function filterNext(currentId) {
+    const curIdx = ORDER.indexOf(currentId);
+    
+    // 1. Get the current subset of data based on ALL current filter values.
+    const subset = getFilteredData();
+    
+    // 2. Iterate and populate/disable subsequent dropdowns (cascading logic)
+    for (let i = curIdx + 1; i < ORDER.length; i++) {
+        const nextId = ORDER[i];
+        const nextEl = document.getElementById(nextId);
+        
+        if (nextEl) {
+            // Find unique values for the next filter column from the current subset
+            const values = getUniqueFilteredValues(subset, nextId);
+            populateDropdown(nextId, values);
+            
+            // If the next dropdown has values, keep it enabled.
+            // If the current selection results in no options for the next one, it gets disabled in populateDropdown.
+            if(values.length === 0) {
+                 nextEl.value = '';
+            }
+        }
+    }
+
+    // 3. Update summary counters based on the new full filter set
+    updateSummaryCounters(); 
+    
+    // 4. Show results based on the new full filter set
+    showResults();
+}
+
+
+/* Show results based on current selections (now a table/grid format) */
+function showResults() {
+    // Filter data using all current selections
+    const rows = getFilteredData(); 
+    const out = document.getElementById('results');
+    out.innerHTML = '';
+    
+    if (!rows.length) {
+        out.innerHTML = '<div class="empty">No matching records found for the selected criteria.</div>';
+        return;
+    }
+    
+    // Wrap the table in a scroll container for mobile responsiveness
+    let html = '<div id="results-scroll-container"><div class="results-table">';
+    
+    // 1. Table Header (8 columns)
+    html += '<div class="table-header">';
+    html += '<div class="table-cell header-cell">Station</div>';
+    html += '<div class="table-cell header-cell">Colony</div>';
+    html += '<div class="table-cell header-cell">Dept</div>';
+    html += '<div class="table-cell header-cell">Building</div>';
+    html += '<div class="table-cell header-cell">Type</div>';
+    html += '<div class="table-cell header-cell">Number</div>';
+    html += '<div class="table-cell header-cell">Floor</div>';
+    html += '<div class="table-cell header-cell">Status</div>';
+    html += '</div>';
+
+    // 2. Data Rows
+    rows.forEach((r, index) => {
+        const statusText = r.status || 'N/A';
+        const isVacant = (statusText.toLowerCase().includes('vacant'));
+        
+        const rowClass = index % 2 === 0 ? 'even-row' : 'odd-row';
+        const statusClass = isVacant ? 'status-vacant' : 'status-occupied';
+
+        html += `<div class="table-row ${rowClass}">`;
+        
+        // Data Cells (8 columns)
+        html += `<div class="table-cell">${r.station || '-'}</div>`;
+        html += `<div class="table-cell">${r.colony || '-'}</div>`;
+        html += `<div class="table-cell">${r.department || '-'}</div>`;
+        html += `<div class="table-cell">${r.building || '-'}</div>`;
+        html += `<div class="table-cell">${r.type || '-'}</div>`;
+        html += `<div class="table-cell">${r.number || '-'}</div>`;
+        html += `<div class="table-cell">${r.floor || '-'}</div>`;
+        html += `<div class="table-cell ${statusClass}">${statusText}</div>`;
+        
+        html += '</div>';
+    });
+    
+    html += '</div></div>'; // Close results-table and scroll-container
+    out.innerHTML = html;
+}
+
+/* Clear all selections & reset dropdowns */
+function clearAll() {
+    // Reset all dropdowns
+    ORDER.forEach(id => {
+        const sel = document.getElementById(id);
+        if (sel) { 
+            sel.value = ''; 
+            if (id !== 'station') {
+                sel.innerHTML = '<option value="">-- Select --</option>'; 
+                sel.disabled = true; 
+            }
+        }
+    });
+    
+    // Ensure the main filter is enabled
+    const stationEl = document.getElementById('station');
+    if (stationEl) stationEl.disabled = false;
+    
+    // Reset the display to show ALL data
+    updateSummaryCounters(); 
+    showResults();
+}
+
+/* Wire events for cascading and clear button */
+function wireEvents() {
+    // 1. Wire cascading filter changes
+    ORDER.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            // Use an anonymous function to pass the currentId for filtering
+            el.addEventListener('change', () => filterNext(id));
+        }
+    });
+
+    // 2. Wire clear button using listener (best practice)
+    document.getElementById('clear-button').addEventListener('click', clearAll);
+}
+
+// Initialize on load
+wireEvents();
+loadCSV();
+</script>
+
+</body>
+</html>
