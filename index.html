@@ -7,8 +7,8 @@
 <style>
 /* Define CSS variables for easier layout management */
 :root {
-	/* Adjusted to account for new padding in Tier 2 (approx 100px total) */
-	--fixed-header-height: 100px; 
+	/* Increased to accommodate the slightly larger, more readable Tier 2 bar */
+	--fixed-header-height: 105px; 
     --max-content-width: 650px; 
     --slidebar-width: 250px;
     --toggle-width: 40px;
@@ -90,8 +90,8 @@ body {
 	display: flex;
 	justify-content: space-between;
 	gap: 10px;
-	/* Padding added here to give vertical spacing to Tier 2 */
-	padding: 10px 25px; /* Added 10px top/bottom padding */
+	/* Increased padding for better vertical spacing */
+	padding: 12px 25px; 
 	background: #fff;
 }
 
@@ -327,7 +327,7 @@ select:disabled {
 	flex-direction: row;
 	justify-content: space-between;
 	align-items: center;
-	/* Adjusted vertical padding to fit naturally with the new 10px padding on the bar */
+	/* Adjusted vertical padding to fit naturally with the new padding on the bar */
 	padding: 2px 10px; 
 	border-radius: 8px;
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -354,11 +354,16 @@ select:disabled {
 .summary-label { flex-basis: 60%; font-weight: 600; font-size: 10px; line-height: 1.1; text-align: left;}
 .summary-value { flex-basis: 40%; font-size: 24px; font-weight: 900; text-align: right;}
 
-/* Tier 2 Specific Overrides */
+/* --- TIER 2 Specific Overrides (IMPROVED READABILITY) --- */
 #total-count-container, #vacant-count, #occupied-count { min-height: initial; }
-/* Reduced font sizes to fit better within the new smaller height/padding */
-.summary-counters-bar .summary-label { font-size: 11px; }
-.summary-counters-bar .summary-value { font-size: 20px; }
+/* Increased font sizes to improve readability */
+.summary-counters-bar .summary-label { 
+    font-size: 13px; /* Increased from 11px */
+    font-weight: 700;
+}
+.summary-counters-bar .summary-value { 
+    font-size: 24px; /* Increased from 20px */
+}
 
 button.action-btn {
 	display: block;
@@ -438,16 +443,16 @@ button.action-btn {
 	
     /* ADJUSTMENT FOR TIER 2 COUNTERS (Minimal padding for mobile fit) */
 	.summary-counters-bar { 
-        padding: 5px 8px; /* Reduced vertical padding on mobile: 5px top/bottom */
+        padding: 8px 8px; /* Increased vertical padding on mobile: 8px top/bottom */
         gap: 5px; 
     } 
     .summary-box {
         /* Adjusted vertical padding to 1px to maximize content space inside bar */
         padding: 1px 4px; 
     }
-    /* Small font size to ensure all text fits the bar on mobile */
-    .summary-counters-bar .summary-label { font-size: 8px; } 
-    .summary-counters-bar .summary-value { font-size: 17px; } 
+    /* Increased font size for better readability on mobile */
+    .summary-counters-bar .summary-label { font-size: 10px; } 
+    .summary-counters-bar .summary-value { font-size: 20px; } /* Increased from 17px */
 
 	.sticky-filter-wrapper, #results { padding: 0 15px; max-width: none; }
 	.sticky-filter-wrapper { margin-top: var(--fixed-header-height); }
@@ -466,9 +471,9 @@ button.action-btn {
 		margin-left: 0;
         transform: translateX(calc(-1 * var(--slidebar-width)));
 	}
-    /* Shift the toggle button down to sit below the fixed header */
+    /* Shift the toggle button down to sit below the fixed header, plus an additional 20px (from last request) */
     #sidebar-toggle {
-        margin-top: var(--fixed-header-height);
+        margin-top: calc(var(--fixed-header-height) + 20px); 
         cursor: pointer;
     }
     
@@ -497,21 +502,25 @@ button.action-btn {
             <!-- P4: Occupied Habitable -->
             <div id="p4-count" class="summary-box oh-summary">
                 <div class="summary-label">OCCUPIED HABITABLE</div>
-                <div id="p4-value" class="summary-value">0</div>
+                <!-- FIX: Added ID 'p4-value' for JavaScript to update -->
+                <div id="p4-value" class="summary-value">0</div> 
             </div>
             <!-- Q4: Occupied Non-Habitable -->
             <div id="q4-count" class="summary-box onh-summary">
                 <div class="summary-label">OCCUPIED NON-HABITABLE</div>
+                <!-- FIX: Added ID 'q4-value' for JavaScript to update -->
                 <div id="q4-value" class="summary-value">0</div>
             </div>
             <!-- R4: Vacant Habitable -->
             <div id="r4-count" class="summary-box vh-summary">
                 <div class="summary-label">VACANT HABITABLE</div>
+                <!-- FIX: Added ID 'r4-value' for JavaScript to update -->
                 <div id="r4-value" class="summary-value">0</div>
             </div>
             <!-- S4: Vacant Non-Habitable -->
             <div id="s4-count" class="summary-box vnh-summary">
                 <div class="summary-label">VACANT NON-HABITABLE</div>
+                <!-- FIX: Added ID 's4-value' for JavaScript to update -->
                 <div id="s4-value" class="summary-value">0</div>
             </div>
         </div>
@@ -700,8 +709,12 @@ async function loadCSV() {
 		showResults();
 
 	} catch (err) {
+		// Log the error but continue running the app
 		console.error('Failed to load CSV:', err);
 		document.getElementById('results').innerHTML = '<div class="empty">Error loading sheet CSV. Please ensure the Google Sheet is published to web as CSV and the link is correct.</div>';
+        
+        // This is where the error originated, so we will safely initialize the counters to 0
+        updateSummaryCounters(0); 
 	}
 }
 
@@ -789,15 +802,17 @@ function updateSummaryCounters() {
 	const totalCount = vacantCount + occupiedCount;
 
 	// Tier 2 Update
-	document.getElementById('total-value').textContent = totalCount;
-	document.getElementById('vacant-value').textContent = vacantCount;
-	document.getElementById('occupied-value').textContent = occupiedCount;
-	
-	// Tier 3 Slidebar Update
-	document.getElementById('p4-value').textContent = p4Count;
-	document.getElementById('q4-value').textContent = q4Count;
-	document.getElementById('r4-value').textContent = r4Count;
-	document.getElementById('s4-value').textContent = s4Count;
+	// Safely update Tier 2 counters
+    if(document.getElementById('total-value')) document.getElementById('total-value').textContent = totalCount;
+    if(document.getElementById('vacant-value')) document.getElementById('vacant-value').textContent = vacantCount;
+    if(document.getElementById('occupied-value')) document.getElementById('occupied-value').textContent = occupiedCount;
+
+    // Tier 3 Slidebar Update
+    // These IDs ('p4-value', etc.) were the source of the previous 'null' error.
+    if(document.getElementById('p4-value')) document.getElementById('p4-value').textContent = p4Count;
+    if(document.getElementById('q4-value')) document.getElementById('q4-value').textContent = q4Count;
+    if(document.getElementById('r4-value')) document.getElementById('r4-value').textContent = r4Count;
+    if(document.getElementById('s4-value')) document.getElementById('s4-value').textContent = s4Count;
 }
 
 /**
