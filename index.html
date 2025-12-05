@@ -7,11 +7,35 @@
 <style>
 /* Define CSS variables for easier layout management */
 :root {
-	--fixed-header-height: 140px; 
+	/* Adjusted to account for new padding in Tier 2 (approx 100px total) */
+	--fixed-header-height: 100px; 
     --max-content-width: 650px; 
     --slidebar-width: 250px;
     --toggle-width: 40px;
 }
+
+/* --- ANIMATION KEYFRAMES for Opening Nudge (Arrow points right, nudges right) --- */
+@keyframes nudge-open {
+    0%, 100% { 
+        transform: translateX(0); 
+    }
+    50% { 
+        transform: translateX(3px); /* Nudge 3px to the right */
+    }
+}
+
+/* --- ANIMATION KEYFRAMES for Closing Nudge (Arrow points left, nudges left) --- */
+@keyframes nudge-close {
+    0%, 100% { 
+        /* Start/end with the 180 degree rotation and no lateral shift */
+        transform: rotate(180deg) translateX(0); 
+    }
+    50% { 
+        /* Nudge 3px to the left, maintaining the 180 degree rotation */
+        transform: rotate(180deg) translateX(-3px); 
+    }
+}
+
 
 /* --- Base & Layout Styles --- */
 body {
@@ -66,8 +90,8 @@ body {
 	display: flex;
 	justify-content: space-between;
 	gap: 10px;
-	/* UPDATED: Reduced top/bottom padding for a more compact look */
-	padding: 8px 25px 8px 25px; 
+	/* Padding added here to give vertical spacing to Tier 2 */
+	padding: 10px 25px; /* Added 10px top/bottom padding */
 	background: #fff;
 }
 
@@ -132,7 +156,7 @@ body {
     left: 0;
     top: 0;
     
-	background: #4169E1; /* Royal Blue */
+	background: #28A745; /* Arrow background green */
 	border: none;
 	width: var(--toggle-width); 
 	height: var(--toggle-width); 
@@ -150,27 +174,39 @@ body {
     z-index: 1001; /* Ensure it's above other sliding elements */
 }
 #sidebar-toggle:hover {
-	background: #3a5cbf; /* Slightly darker blue on hover */
+	background: #1e7e34; /* Darker green on hover */
 }
 
 /* Arrow Icon Styling (SVG container) */
 #toggle-icon {
 	display: inline-block;
-	transition: transform 0.3s ease-in-out;
+    /* Transition is crucial for a smooth flip during toggle */
+	transition: transform 0.3s ease-in-out; 
 	line-height: 1;
+}
+
+/* 1. Closed state: Apply nudge-open animation (Arrow points right, nudges right) */
+.slidebar-group:not(.active) #toggle-icon {
+    animation: nudge-open 1.5s infinite ease-in-out;
+    /* Ensure no rotation is applied by default */
+    transform: translateX(0);
+}
+
+/* 2. Open state: Apply nudge-close animation (Arrow points left, nudges left) */
+.slidebar-group.active #toggle-icon {
+    animation: nudge-close 1.5s infinite ease-in-out;
 }
 
 /* Style for the SVG arrow inside the button */
 #toggle-icon svg {
     display: block;
-    stroke: white; 
+    stroke: white; /* Arrow color to white */
     width: 18px; 
     height: 18px;
     position: static;
-    /* Default is right-pointing arrow (Closed state) */
 }
 
-/* Rotate the icon when the sidebar is active (right arrow -> left arrow) */
+/* The 'rotated' class is kept for smooth transition fallback */
 #toggle-icon.rotated {
     transform: rotate(180deg);
 }
@@ -221,6 +257,7 @@ body {
 .sticky-filter-wrapper {
 	max-width: var(--max-content-width);
 	margin: 0 auto;
+	/* Ensures the content starts exactly where the fixed header ends */
 	margin-top: var(--fixed-header-height);
 }
 
@@ -290,7 +327,8 @@ select:disabled {
 	flex-direction: row;
 	justify-content: space-between;
 	align-items: center;
-	padding: 5px 10px; /* Default internal padding for boxes */
+	/* Adjusted vertical padding to fit naturally with the new 10px padding on the bar */
+	padding: 2px 10px; 
 	border-radius: 8px;
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -315,9 +353,12 @@ select:disabled {
 /* Values */
 .summary-label { flex-basis: 60%; font-weight: 600; font-size: 10px; line-height: 1.1; text-align: left;}
 .summary-value { flex-basis: 40%; font-size: 24px; font-weight: 900; text-align: right;}
-#total-count-container, #vacant-count, #occupied-count { min-height: 45px; }
-.summary-counters-bar .summary-label { font-size: 16px; }
-.summary-counters-bar .summary-value { font-size: 28px; }
+
+/* Tier 2 Specific Overrides */
+#total-count-container, #vacant-count, #occupied-count { min-height: initial; }
+/* Reduced font sizes to fit better within the new smaller height/padding */
+.summary-counters-bar .summary-label { font-size: 11px; }
+.summary-counters-bar .summary-value { font-size: 20px; }
 
 button.action-btn {
 	display: block;
@@ -395,16 +436,18 @@ button.action-btn {
     }
 	.header-title-text { font-size: 18px; }
 	
-    /* ADJUSTMENT FOR TIER 2 COUNTERS (Further reduced vertical padding) */
+    /* ADJUSTMENT FOR TIER 2 COUNTERS (Minimal padding for mobile fit) */
 	.summary-counters-bar { 
-        padding: 5px 8px; /* Reduced outer padding from 8px to 5px top/bottom */
+        padding: 5px 8px; /* Reduced vertical padding on mobile: 5px top/bottom */
         gap: 5px; 
     } 
     .summary-box {
-        padding: 5px; 
+        /* Adjusted vertical padding to 1px to maximize content space inside bar */
+        padding: 1px 4px; 
     }
-    .summary-counters-bar .summary-label { font-size: 11px; } 
-    .summary-counters-bar .summary-value { font-size: 20px; } 
+    /* Small font size to ensure all text fits the bar on mobile */
+    .summary-counters-bar .summary-label { font-size: 8px; } 
+    .summary-counters-bar .summary-value { font-size: 17px; } 
 
 	.sticky-filter-wrapper, #results { padding: 0 15px; max-width: none; }
 	.sticky-filter-wrapper { margin-top: var(--fixed-header-height); }
@@ -566,8 +609,9 @@ function toggleSlidebar() {
     contentWrapper.classList.toggle('shifted');
 	overlay.classList.toggle('active');
 
-	// Toggle the 'rotated' class on the icon element for the visual effect
-    // Default SVG points right (Closed state). We rotate it 180deg to point left (Open state).
+	// We still toggle the 'rotated' class on the icon element to ensure the quick 
+    // visual flip (using the transition) happens immediately on click before the 
+    // animation fully takes over.
 	if (icon) {
 		icon.classList.toggle('rotated', isActive); 
 	}
