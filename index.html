@@ -441,18 +441,21 @@ button.action-btn {
     }
 	.header-title-text { font-size: 18px; }
 	
-    /* ADJUSTMENT FOR TIER 2 COUNTERS (Minimal padding for mobile fit) */
+    /* ---------------------------------------------------- */
+    /* --- TIER 2 COUNTER HEIGHT ADJUSTMENT (2X Height) --- */
+    /* ---------------------------------------------------- */
 	.summary-counters-bar { 
-        padding: 8px 8px; /* Increased vertical padding on mobile: 8px top/bottom */
+        /* Increased vertical padding from 8px to 15px */
+        padding: 15px 8px; 
         gap: 5px; 
     } 
     .summary-box {
-        /* Adjusted vertical padding to 1px to maximize content space inside bar */
-        padding: 1px 4px; 
+        /* Increased internal vertical padding from 1px to 4px */
+        padding: 4px 4px; 
     }
-    /* Increased font size for better readability on mobile */
+    /* Font size remains optimized for mobile readability */
     .summary-counters-bar .summary-label { font-size: 10px; } 
-    .summary-counters-bar .summary-value { font-size: 20px; } /* Increased from 17px */
+    .summary-counters-bar .summary-value { font-size: 20px; } 
 
 	.sticky-filter-wrapper, #results { padding: 0 15px; max-width: none; }
 	.sticky-filter-wrapper { margin-top: var(--fixed-header-height); }
@@ -808,7 +811,6 @@ function updateSummaryCounters() {
     if(document.getElementById('occupied-value')) document.getElementById('occupied-value').textContent = occupiedCount;
 
     // Tier 3 Slidebar Update
-    // These IDs ('p4-value', etc.) were the source of the previous 'null' error.
     if(document.getElementById('p4-value')) document.getElementById('p4-value').textContent = p4Count;
     if(document.getElementById('q4-value')) document.getElementById('q4-value').textContent = q4Count;
     if(document.getElementById('r4-value')) document.getElementById('r4-value').textContent = r4Count;
