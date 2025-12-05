@@ -3,55 +3,62 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Quarter Search — Table View</title>
+<title>Quarter Search — Slide-Out Sidebar</title>
 <style>
-/* Define a CSS variable for the exact height of the fixed header group (Tiers 1, 2, & 3) */
+/* Define CSS variables for easier layout management */
 :root {
-	/* Increased height slightly for better spacing below the fixed header */
-	--fixed-header-height: 200px; 
+	--fixed-header-height: 140px; 
+    --max-content-width: 650px; 
+    --slidebar-width: 250px;
+    --toggle-width: 40px;
 }
 
 /* --- Base & Layout Styles --- */
-body { 
-	font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-	background: #f0f2f5; 
-	/* Default desktop padding */
-	padding: 0 20px 20px 20px; 
-	min-height: 200vh; 
+body {
+	font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+	background: #f0f2f5;
+	padding: 0 20px 20px 20px;
+	min-height: 200vh;
 }
 
-/* --- Tiers 1, 2, & 3 Sticky Group (PERMANENTLY fixed) --- */
+/* --- Tiers 1 & 2 Sticky Group (PERMANENTLY fixed) --- */
 .sticky-header-group-outer {
-	max-width: 650px; 
+	max-width: var(--max-content-width);
 	margin: 0 auto;
-	position: fixed; 
-	top: 0; 
-	left: 50%; 
-	transform: translateX(-50%); 
-	width: calc(100% - 40px); /* Account for desktop body padding */
+	position: fixed;
+	top: 0;
+	left: 50%;
+	transform: translateX(-50%);
+	width: calc(100% - 40px);
 	box-sizing: border-box;
-	z-index: 100; /* Fixed elements should have high Z-index */
+	z-index: 100;
 	background: #fff;
 	border-top-left-radius: 12px;
 	border-top-right-radius: 12px;
-	overflow: hidden; 
-	box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); 
-	/* FIX: Add hardware acceleration hints to prevent mobile flickering/disappearance */
+	overflow: hidden;
+	box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
 	-webkit-backface-visibility: hidden;
 	backface-visibility: hidden;
-	will-change: transform; 
+	will-change: transform;
 }
 
 /* --- TIER 1: Title Bar (Royal Blue) --- */
 .header-title-bar {
 	background: #4169E1; /* Royal Blue */
 	color: white;
-	padding: 15px 25px; 
-	text-align: center;
-	font-size: 22px;
+	padding: 15px 20px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.header-title-text {
+	font-size: 20px;
 	font-weight: 700;
 	text-transform: uppercase;
 	letter-spacing: 1px;
+	text-align: center;
+	flex-grow: 0;
 }
 
 /* --- TIER 2: Counters Section (Summary Bar: Total/Vacant/Occupied) */
@@ -59,44 +66,196 @@ body {
 	display: flex;
 	justify-content: space-between;
 	gap: 10px;
-	padding: 10px 25px 15px 25px; 
-	background: #fff; 
-	border-bottom: 1px solid #eee; 
-	margin-bottom: 5px; /* Added slight margin for separation from TIER 3 */
+	/* UPDATED: Reduced top/bottom padding for a more compact look */
+	padding: 8px 25px 8px 25px; 
+	background: #fff;
 }
 
-/* --- TIER 3: P4/Q4 Counters Section (New Row) --- */
-.p4-counters-bar {
+/* --- SLIDEBAR (Tier 3 Sidebar) --- */
+.slidebar-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: rgba(0, 0, 0, 0.5);
+	z-index: 900;
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity 0.3s;
+}
+.slidebar-overlay.active {
+	opacity: 1;
+	visibility: visible;
+}
+
+/* --- SLIDEBAR GROUP: Contains Panel + Toggle (Slides together) --- */
+.slidebar-group {
+    position: fixed;
+	top: var(--fixed-header-height); /* Start below the fixed header on desktop */
+	
+	/* Anchor the group to the left edge of the main content area (650px wide) */
+	left: 50%; 
+	margin-left: calc(-1 * (var(--max-content-width) / 2)); 
+	
+	width: calc(var(--slidebar-width) + var(--toggle-width)); 
+	height: calc(100vh - var(--fixed-header-height)); 
+	z-index: 1000; 
+	
+	/* Default HIDDEN state: Hides the panel off-screen, but leaves the toggle visible (40px) */
+	transform: translateX(calc(-1 * var(--slidebar-width))); 
+	transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+    
+    display: flex; /* Panel + Toggle side-by-side */
+}
+.slidebar-group.active {
+	transform: translateX(0); /* Slides panel completely into view */
+}
+
+/* --- SLIDEBAR PANEL (The content) --- */
+.slidebar-panel {
+    width: var(--slidebar-width); 
+    height: 100%; 
+	background: white;
+	box-shadow: 5px 0 20px rgba(0,0,0,0.15); 
+	padding: 20px;
+	box-sizing: border-box;
+	overflow-y: auto;
+	border-bottom-right-radius: 12px;
+    flex-shrink: 0;
+}
+
+/* Style for the button attached to the sliding panel */
+#sidebar-toggle {
+    /* Button is part of the sliding group, positioned right of the panel */
+    position: relative; 
+    left: 0;
+    top: 0;
+    
+	background: #4169E1; /* Royal Blue */
+	border: none;
+	width: var(--toggle-width); 
+	height: var(--toggle-width); 
+	padding: 0; 
+	border-radius: 0 8px 8px 0; /* Only right corners rounded */
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2); 
+	cursor: pointer;
+	transition: background 0.2s;
+	display: flex; 
+	justify-content: center;
+	align-items: center;
+	line-height: 1;
+    margin-top: 25px; /* Aligned with top padding of the filter card on desktop */
+    flex-shrink: 0;
+    z-index: 1001; /* Ensure it's above other sliding elements */
+}
+#sidebar-toggle:hover {
+	background: #3a5cbf; /* Slightly darker blue on hover */
+}
+
+/* Arrow Icon Styling (SVG container) */
+#toggle-icon {
+	display: inline-block;
+	transition: transform 0.3s ease-in-out;
+	line-height: 1;
+}
+
+/* Style for the SVG arrow inside the button */
+#toggle-icon svg {
+    display: block;
+    stroke: white; 
+    width: 18px; 
+    height: 18px;
+    position: static;
+    /* Default is right-pointing arrow (Closed state) */
+}
+
+/* Rotate the icon when the sidebar is active (right arrow -> left arrow) */
+#toggle-icon.rotated {
+    transform: rotate(180deg);
+}
+
+
+.slidebar-header {
 	display: flex;
-	justify-content: space-between;
-	gap: 10px;
-	padding: 0 25px 15px 25px; /* Reduced top padding */
-	background: #fff; 
+	justify-content: center; 
+	align-items: center;
+	margin-bottom: 25px;
+	border-bottom: 2px solid #f0f2f5;
+	padding-bottom: 10px;
+}
+.slidebar-title {
+	font-size: 18px;
+	font-weight: 800;
+	color: #333;
+	text-transform: uppercase;
 }
 
-/* * --- Filter Card Wrapper (Flow Adjustment) --- 
- * Pushes the rest of the content down precisely by the fixed header height variable.
- */
+
+/* Sidebar Boxes (Vertical Stack) */
+.slidebar-content {
+	display: flex;
+	flex-direction: column;
+	gap: 15px;
+}
+.slidebar-content .summary-box {
+	padding: 15px;
+	min-height: 60px;
+}
+.slidebar-content .summary-label {
+	font-size: 12px;
+}
+
+
+/* --- CONTENT WRAPPER: Shifts when the sidebar is open --- */
+#content-wrapper {
+    transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+#content-wrapper.shifted {
+    /* Shifts the main content to the right by the width of the slidebar panel */
+    transform: translateX(var(--slidebar-width)); 
+}
+
+
+/* --- Filter Card Wrapper --- */
 .sticky-filter-wrapper {
-	max-width: 650px; 
+	max-width: var(--max-content-width);
 	margin: 0 auto;
-	/* Uses the CSS variable for perfect gap removal */
-	margin-top: var(--fixed-header-height); 
+	margin-top: var(--fixed-header-height);
 }
 
-/* --- Card Content (The white filter box) --- */
+/* --- App Container --- */
 .app-container {
 	background: #ffffff;
-	padding: 25px; 
+	padding: 25px;
 	border-radius: 12px;
-	border-top-left-radius: 0;
-	border-top-right-radius: 0;
-	box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); 
-	position: relative;
-	z-index: 5;
+	box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+	position: relative; 
+	z-index: 5; 
+    margin-bottom: 15px;
 }
 
-/* --- General Filter/Input Styles --- */
+/* Filter Card Header and Title Styling (REVERTED) */
+.filter-header {
+	display: flex;
+	/* ALIGNMENT CHANGE: Center the contents horizontally */
+	justify-content: center; 
+	align-items: center;
+	margin-bottom: 15px;
+	padding-bottom: 10px;
+	border-bottom: 1px solid #e0e0e0;
+    
+    /* Removed padding-left from previous version */
+    padding-left: 0; 
+}
+.filter-title {
+	font-size: 1.25rem;
+	font-weight: 700;
+	color: #333;
+}
+
+
+/* --- General Input Styles --- */
 label {
 	display: block;
 	margin: 15px 0 5px;
@@ -104,9 +263,7 @@ label {
 	color: #444;
 	font-weight: 600;
 }
-
-/* Style for all select and text inputs to look consistent */
-select, input[type="text"] { 
+select, input[type="text"] {
 	width: 100%;
 	padding: 12px 10px;
 	margin-bottom: 15px;
@@ -114,118 +271,57 @@ select, input[type="text"] {
 	border: 1px solid #ccc;
 	background: #fff;
 	font-size: 16px;
-	transition: border-color 0.3s, box-shadow 0.3s, background-color 0.3s;
-}
-
-select {
-	/* Custom styling for the dropdown arrow */
-	-webkit-appearance: none; 
-	-moz-appearance: none;
-	appearance: none;
-	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='%23666' d='M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z'/%3E%3Csvg%3E");
-	background-repeat: no-repeat;
-	background-position: right 10px top 50%;
-	background-size: 12px;
+	transition: border-color 0.3s;
 }
 select:focus, input[type="text"]:focus {
-	border-color: #007bff; 
-	box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+	border-color: #007bff;
 	outline: none;
 }
-
-/* Styling for disabled selects */
 select:disabled {
 	background-color: #f7f7f7;
 	color: #999;
 	cursor: not-allowed;
-	border-color: #eee;
 }
 
-/* --- Summary Counter Specific Styles (TIER 2 & 3 UNIFIED) --- */
+/* --- Summary Box Styles --- */
 .summary-box {
 	flex-grow: 1;
-	flex-basis: 0;
-	/* Apply two-column flex layout to all summary boxes */
-	display: flex; 
-	flex-direction: row; 
-	justify-content: space-between; 
-	align-items: center; /* Vertically center the content */
-	padding: 5px 10px; /* Adjusted padding for horizontal content */
-	
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	align-items: center;
+	padding: 5px 10px; /* Default internal padding for boxes */
 	border-radius: 8px;
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-	min-width: 0; 
 }
 
-/* TIER 2 Specific Height Adjustment (Total/Vacant/Occupied) - UPDATED TO 45PX */
-#total-count-container, 
-#vacant-count, 
-#occupied-count {
-	min-height: 45px; 
-}
+/* Tier 2 Colors */
+.summary-box.blue-summary { background: #4169E1; color: white; }
+.summary-box.red-summary { background: #DC3545; color: white; }
+.summary-box.green-summary { background: #28A745; color: white; }
 
-/* TIER 2 Specific Font Size Increase (Total/Vacant/Occupied) - NEW */
-.summary-counters-bar .summary-label {
-	font-size: 16px; /* Significantly larger for prominence */
-	font-weight: 700;
-	line-height: 1.2;
-}
-.summary-counters-bar .summary-value {
-	font-size: 28px; /* Larger count to match the larger box */
-}
+/* Tier 3 Colors (Sidebar) */
+.summary-box.oh-summary { background: #D4EDBC; color: #14532d; } 
+.summary-box.onh-summary { background: #D4EDBC; color: #14532d; } 
+.summary-box.vh-summary { 
+    background: #FFCFC9; /* Vacant Habitable (FFCFC9) */
+    color: #A00000; 
+} 
+.summary-box.vnh-summary { 
+    background: #FFCFC9; /* Vacant Non-Habitable (FFCFC9) */
+    color: #A00000; 
+} 
 
-/* TIER 2 Summary Box color styles (Explicitly setting white text for dark backgrounds) */
-.summary-box.blue-summary {
-	background: #4169E1;
-	color: white; 
-}
-.summary-box.red-summary {
-	background: #DC3545; 
-	color: white; 
-}
-.summary-box.green-summary {
-	background: #28A745; 
-	color: white; 
-}
+/* Values */
+.summary-label { flex-basis: 60%; font-weight: 600; font-size: 10px; line-height: 1.1; text-align: left;}
+.summary-value { flex-basis: 40%; font-size: 24px; font-weight: 900; text-align: right;}
+#total-count-container, #vacant-count, #occupied-count { min-height: 45px; }
+.summary-counters-bar .summary-label { font-size: 16px; }
+.summary-counters-bar .summary-value { font-size: 28px; }
 
-/* TIER 3 Summary Box color styles (Explicitly setting black text for light backgrounds) */
-/* Occupied Habitable (P4) and Occupied Non-Habitable (Q4) */
-.summary-box.pink-summary,
-.summary-box.orange-summary {
-	background: #d4edbc; /* Light Greenish */
-	color: #000000; /* Black text */
-}
-
-/* Vacant Habitable (R4) and Vacant Non-Habitable (S4) */
-.summary-box.purple-summary,
-.summary-box.teal-summary {
-	background: #ffcfc9; /* Light Reddish */
-	color: #000000; /* Black text */
-}
-
-
-/* --- Summary Label (Left Side - Unified Style for TIER 2 & 3) --- */
-.summary-label {
-	text-align: left;
-	flex-basis: 60%; /* Give more space to the label */
-	font-size: 10px; /* Default for TIER 3 labels */
-	font-weight: 600; 
-	line-height: 1.1; /* Tighter line height for two lines */
-	margin: 0; /* Remove default margin */
-	opacity: 1;
-}
-
-/* --- Summary Value (Right Side - Unified Style for TIER 2 & 3) --- */
-.summary-value {
-	text-align: right;
-	flex-basis: 40%;
-	font-size: 24px; /* Make the count stand out */
-	font-weight: 900;
-}
-
-button {
+button.action-btn {
 	display: block;
-	width: 100%; 
+	width: 100%;
 	padding: 14px;
 	border-radius: 8px;
 	border: 0;
@@ -234,47 +330,29 @@ button {
 	font-weight: 700;
 	cursor: pointer;
 	margin-top: 20px;
-	transition: background 0.3s, box-shadow 0.3s;
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-button:hover {
-	background: #333333;
-	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
 
-
-/* --- TABLE/GRID Layout Styles --- */
-#results {
-	max-width: 650px; 
-	margin: 25px auto 0;
-}
-
+/* --- Results Table --- */
+#results { max-width: var(--max-content-width); margin: 0 auto; }
 .results-table {
 	display: grid;
-	/* 8 columns: 2 wide columns + 6 standard columns */
-	grid-template-columns: 1.2fr 1.2fr 1fr 1fr 1fr 1fr 1fr 1fr; 
+	grid-template-columns: 1.2fr 1.2fr 1fr 1fr 1fr 1fr 1fr 1fr;
 	gap: 1px;
-	background-color: #e0e0e0; 
+	background-color: #e0e0e0;
 	border-radius: 10px;
 	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
 }
-
-/* * --- TIER 4 STANDARD HEADER (The Royal Blue Row) --- */
 .table-header {
-	grid-column: 1 / -1; 
-	display: grid; 
-	grid-template-columns: 1.2fr 1.2fr 1fr 1fr 1fr 1fr 1fr 1fr; 
-	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); 
-	
-	/* STICKY BEHAVIOR: Sticks right below the main fixed header */
+	grid-column: 1 / -1;
+	display: grid;
+	grid-template-columns: 1.2fr 1.2fr 1fr 1fr 1fr 1fr 1fr 1fr;
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 	position: sticky;
-	top: var(--fixed-header-height); 
-	background-color: #4169E1; 
-	
-	/* FIX: Increased z-index for the sticky header to ensure it stays on top of results */
-	z-index: 60; 
+	top: var(--fixed-header-height);
+	background-color: #4169E1;
+	z-index: 60;
 }
-
 .table-row { display: contents; }
 .table-cell {
 	padding: 12px 8px;
@@ -284,312 +362,258 @@ button:hover {
 	overflow: hidden;
 	white-space: nowrap;
 	text-overflow: ellipsis;
-	user-select: none;
-	-webkit-user-select: none;
 }
 .header-cell {
-	/* New Styling: White text and Royal Blue background */
-	color: white; 
-	background-color: #4169E1; 
+	color: white;
+	background-color: #4169E1;
 	font-weight: 700;
 	text-transform: uppercase;
 	padding: 15px 8px;
 	font-size: 12px;
-	letter-spacing: 0.5px;
-	/* FIX: Set a slightly higher z-index on header cells to ensure content doesn't bleed through */
 	position: relative;
-	z-index: 61; 
+	z-index: 61;
+	border-right: 2px solid #4169E1;
 }
-/* Ensure the grid gap background color is not visible */
-.table-header .header-cell {
-	border-right: 2px solid #4169E1; 
-}
+.table-header .header-cell:first-child { border-top-left-radius: 10px; }
+.table-header .header-cell:last-child { border-top-right-radius: 10px; border-right: none; }
+.status-occupied { background-color: #e6ffe6; color: #28a745; font-weight: 600;}
+.status-vacant { background-color: #ffeded; color: #dc3545; font-weight: 600;}
+.table-row:nth-child(even) .table-cell { background-color: #f8f9fa; }
+.table-row:nth-child(even) .status-occupied { background-color: #e0f8e0; }
+.table-row:nth-child(even) .status-vacant { background-color: #feebe9; }
 
-
-/* Apply border radius directly to the cells to match .results-table */
-.table-header .header-cell:first-child {
-	border-top-left-radius: 10px;
-}
-.table-header .header-cell:last-child {
-	border-top-right-radius: 10px;
-	/* Remove the right border from the last column */
-	border-right: none; 
-}
-
-/* Mobile Responsiveness: Refined fixed/sticky behavior for small screens */
+/* Mobile Adaptations (Responsive View) */
 @media (max-width: 680px) {
-	/* 1. Remove body padding for max compatibility with fixed elements */
-	body {
-		padding: 0 0 15px 0; /* Only bottom padding remains */
-	}
-
-	/* 2. Make fixed header 100% width, no offset needed */
-	.sticky-header-group-outer {
-		width: 100%; 
-		left: 0; 
-		transform: none; 
-		max-width: none;
-		border-top-left-radius: 0; /* Sharp corners on mobile */
-		border-top-right-radius: 0;
-	}
-	
-	/* 3. Add internal padding to fixed elements */
-	.summary-counters-bar, .header-title-bar, .p4-counters-bar {
-		padding-left: 15px;
-		padding-right: 15px;
-	}
-
-	/* 4. Apply width limit and padding to the scrollable content containers */
-	.sticky-filter-wrapper, #results {
-		padding: 0 15px; /* Add horizontal padding back to content */
-		max-width: none; /* Removed max-width to allow full mobile width */
-		box-sizing: border-box;
-		/* FIX: Ensure horizontal centering while preserving margin-top for content clearance */
-        margin-left: auto;
-        margin-right: auto;
-	}
-    
-    /* FIX: Explicitly re-apply the top margin to push the content down 
-       This prevents the Station/Colony fields from being hidden. */
-    .sticky-filter-wrapper {
-        margin-top: var(--fixed-header-height); 
+	/* General Layout */
+	body { padding: 0 0 15px 0; }
+	.sticky-header-group-outer { 
+        width: 100%; 
+        border-radius: 0; 
+        /* Ensure the fixed element uses the full width */
+        left: 0; 
+        transform: none;
     }
+	.header-title-text { font-size: 18px; }
+	
+    /* ADJUSTMENT FOR TIER 2 COUNTERS (Further reduced vertical padding) */
+	.summary-counters-bar { 
+        padding: 5px 8px; /* Reduced outer padding from 8px to 5px top/bottom */
+        gap: 5px; 
+    } 
+    .summary-box {
+        padding: 5px; 
+    }
+    .summary-counters-bar .summary-label { font-size: 11px; } 
+    .summary-counters-bar .summary-value { font-size: 20px; } 
 
-	/* 5. Tweak App Container visuals */
-	.app-container {
-		border-radius: 0; /* Match full-width header look */
-		box-shadow: none; /* Remove shadow to prevent mobile artifacts */
-	}
+	.sticky-filter-wrapper, #results { padding: 0 15px; max-width: none; }
+	.sticky-filter-wrapper { margin-top: var(--fixed-header-height); }
+	.results-table { border-radius: 8px; }
 	
-	/* 6. Ensure table radius is defined consistently (slightly smaller for mobile aesthetic) */
-	.results-table {
-		border-radius: 8px;
-	}
-
-	.table-header .header-cell:first-child {
-		border-top-left-radius: 8px;
-	}
-	.table-header .header-cell:last-child {
-		border-top-right-radius: 8px;
-	}
+	/* Results Table Compression */
+	.table-cell { font-size: 10px; padding: 6px 3px; }
+	.header-cell { font-size: 9px; padding: 8px 3px; border-right: 1px solid #4169E1;}
 	
-	/* Fix for header cell border on mobile */
-	.table-header .header-cell {
-		border-right: 1px solid #4169E1;
+	/* --- SIDEBAR FIXES FOR MOBILE CLICKABILITY --- */
+	.slidebar-group {
+        /* Anchor to top of viewport and full height */
+        top: 0; 
+        height: 100vh;
+		left: 0; 
+		margin-left: 0;
+        transform: translateX(calc(-1 * var(--slidebar-width)));
 	}
-	.table-header .header-cell:last-child {
-		border-right: none;
-	}
-
-	/* Reduce font size and padding inside cells to fit all 8 columns on a small screen */
-	.table-cell {
-		font-size: 10px;
-		padding: 6px 3px;
-	}
-	.header-cell {
-		font-size: 9px;
-		padding: 8px 3px;
-	}
-	
-	/* Mobile specific adjustment for TIER 2 label size */
-	.summary-counters-bar .summary-label {
-		font-size: 12px; /* Adjusted down for mobile screen space */
-	}
-	.summary-counters-bar .summary-value {
-		font-size: 24px; /* Adjusted down for mobile screen space */
-	}
-	
-	/* TIER 3 counters on mobile */
-	.summary-label {
-		font-size: 9px;
-	}
-	.summary-value {
-		font-size: 20px;
-	}
+    /* Shift the toggle button down to sit below the fixed header */
+    #sidebar-toggle {
+        margin-top: var(--fixed-header-height);
+        cursor: pointer;
+    }
+    
+    /* Mobile Content Shift */
+    #content-wrapper.shifted {
+        transform: translateX(var(--slidebar-width)); 
+    }
 }
 
 .empty{padding:20px;background:#fff;border-radius:10px;border:1px dashed #e0e0e0;text-align:center;color:#888; margin-top: 25px;}
-
-/* Custom styles for Status cells */
-.status-occupied {
-	background-color: #e6ffe6; /* Light green */
-	font-weight: 600;
-	color: #28a745;
-}
-
-.status-vacant {
-	background-color: #ffeded; /* Light red */
-	font-weight: 600;
-	color: #dc3545;
-}
-
-.table-row:nth-child(even) .table-cell {
-	background-color: #f8f9fa; /* Slightly darker background for even rows */
-}
-.table-row:nth-child(even) .status-occupied {
-	background-color: #e0f8e0;
-}
-.table-row:nth-child(even) .status-vacant {
-	background-color: #feebe9;
-}
-
-
 </style>
 </head>
 <body>
 
-<!-- START: Tiers 1, 2, & 3 Fixed Group (Always visible at the top) -->
+<!-- Slidebar Overlay -->
+<div class="slidebar-overlay" id="overlay" onclick="toggleSlidebar()"></div>
+
+<!-- Slidebar Group (Panel + Toggle) - This entire block slides -->
+<div class="slidebar-group" id="slidebar-group">
+    <!-- Slidebar Panel (Tier 3) -->
+    <div class="slidebar-panel" id="slidebar">
+        <div class="slidebar-header">
+            <div class="slidebar-title">Detailed Breakdown</div>
+        </div>
+        <div class="slidebar-content">
+            <!-- P4: Occupied Habitable -->
+            <div id="p4-count" class="summary-box oh-summary">
+                <div class="summary-label">OCCUPIED HABITABLE</div>
+                <div id="p4-value" class="summary-value">0</div>
+            </div>
+            <!-- Q4: Occupied Non-Habitable -->
+            <div id="q4-count" class="summary-box onh-summary">
+                <div class="summary-label">OCCUPIED NON-HABITABLE</div>
+                <div id="q4-value" class="summary-value">0</div>
+            </div>
+            <!-- R4: Vacant Habitable -->
+            <div id="r4-count" class="summary-box vh-summary">
+                <div class="summary-label">VACANT HABITABLE</div>
+                <div id="r4-value" class="summary-value">0</div>
+            </div>
+            <!-- S4: Vacant Non-Habitable -->
+            <div id="s4-count" class="summary-box vnh-summary">
+                <div class="summary-label">VACANT NON-HABITABLE</div>
+                <div id="s4-value" class="summary-value">0</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- The toggle button/handle is now attached to the sliding panel, acting as the handle -->
+    <button id="sidebar-toggle" onclick="toggleSlidebar()">
+        <span id="toggle-icon">
+            <!-- Default state: points right (to open the panel) -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14"/>
+                <path d="m12 5 7 7-7 7"/>
+            </svg>
+        </span>
+    </button>
+</div>
+
+<!-- Sticky Header (Tiers 1 & 2) -->
 <div class="sticky-header-group-outer">
-	<div class="sticky-header-group"> 
-		
-		<!-- TIER 1: Title Bar (Royal Blue) -->
+	<div class="sticky-header-group">
+		<!-- TIER 1 -->
 		<div class="header-title-bar">
-			SOLAPUR DIVISION QUARTER SEARCH
+			<div class="header-title-text">SOLAPUR DIVISION QUARTER SEARCH</div>
 		</div>
-		
-		<!-- TIER 2: Counters Section (Summary Bar: Total/Occupied/Vacant) -->
-		<div class="summary-counters-bar"> 
-			
-			<!-- Total Counter (Blue) - Position 1 -->
+		<!-- TIER 2 -->
+		<div class="summary-counters-bar">
 			<div id="total-count-container" class="summary-box blue-summary">
 				<div class="summary-label">TOTAL</div>
 				<div id="total-value" class="summary-value">0</div>
 			</div>
-			
-			<!-- Occupied Counter (Green) - Position 2 (New Position) -->
 			<div id="occupied-count" class="summary-box green-summary">
 				<div class="summary-label">OCCUPIED</div>
 				<div id="occupied-value" class="summary-value">0</div>
 			</div>
-			
-			<!-- Vacant Counter (Red) - Position 3 (New Position) -->
 			<div id="vacant-count" class="summary-box red-summary">
 				<div class="summary-label">VACANT</div>
 				<div id="vacant-value" class="summary-value">0</div>
 			</div>
 		</div>
-
-		<!-- TIER 3: P4/Q4/R4/S4 Counters Section -->
-		<div class="p4-counters-bar"> 
-			
-			<!-- P4 Counter: Occupied Habitable (Light Green/Black Text) -->
-			<div id="p4-count" class="summary-box pink-summary">
-				<div class="summary-label">OCCUPIED<br>HABITABLE</div> 
-				<div id="p4-value" class="summary-value">0</div>
-			</div>
-			<!-- Q4 Counter: Occupied Non-Habitable (Light Green/Black Text) -->
-			<div id="q4-count" class="summary-box orange-summary">
-				<div class="summary-label">OCCUPIED<br>NON-HABITABLE</div> 
-				<div id="q4-value" class="summary-value">0</div>
-			</div>
-			<!-- R4 Counter: Vacant Habitable (Light Red/Black Text) -->
-			<div id="r4-count" class="summary-box purple-summary">
-				<div class="summary-label">VACANT<br>HABITABLE</div> 
-				<div id="r4-value" class="summary-value">0</div>
-			</div>
-			<!-- S4 Counter: Vacant Non-Habitable (Light Red/Black Text) -->
-			<div id="s4-count" class="summary-box teal-summary">
-				<div class="summary-label">VACANT<br>NON-HABITABLE</div> 
-				<div id="s4-value" class="summary-value">0</div>
-			</div>
-		</div>
-	</div>
-</div>
-<!-- END: Tiers 1, 2, & 3 Fixed Group -->
-
-
-<!-- Filter Card Wrapper (Pushed down 200px to start after the fixed header) -->
-<div class="sticky-filter-wrapper">
-	<div class="app-container">
-		
-		<!-- Filters start here (Updated to use <label> for accessibility) -->
-		
-		<label for="station">Station</label>
-		<select id="station" name="station"></select>
-		
-		<label for="colony">Colony</label>
-		<select id="colony" name="colony" disabled></select>
-		
-		<label for="department">Department</label>
-		<select id="department" name="department" disabled></select>
-		
-		<label for="building">Building</label>
-		<select id="building" name="building" disabled></select>
-		
-		<label for="type">Type</label>
-		<select id="type" name="type" disabled></select>
-		
-		<label for="number">Number</label>
-		<select id="number" name="number" disabled></select>
-		
-		<label for="floor">Floor</label>
-		<select id="floor" name="floor" disabled></select>
-		
-		<button id="clear-button">CLEAR</button>
 	</div>
 </div>
 
-<div id="results"></div>
+<!-- Main Content Wrapper - Shifts when the sidebar is open -->
+<main id="content-wrapper">
+
+    <!-- Filters -->
+    <div class="sticky-filter-wrapper">
+        <div class="app-container">
+            
+            <!-- Filter Card Header with centered Title (No more special padding for the button) -->
+            <div class="filter-header">
+                <h2 class="filter-title">Filter Quarters</h2>
+            </div>
+
+            <label for="station">Station</label>
+            <select id="station" name="station"></select>
+            
+            <label for="colony">Colony</label>
+            <select id="colony" name="colony" disabled></select>
+            
+            <label for="department">Department</label>
+            <select id="department" name="department" disabled></select>
+            
+            <label for="building">Building</label>
+            <select id="building" name="building" disabled></select>
+            
+            <label for="type">Type</label>
+            <select id="type" name="type" disabled></select>
+            
+            <label for="number">Number</label>
+            <select id="number" name="number" disabled></select>
+            
+            <label for="floor">Floor</label>
+            <select id="floor" name="floor" disabled></select>
+            
+            <button class="action-btn" id="clear-button">CLEAR</button>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div id="results"></div>
+
+</main>
 
 <script>
-const csvUrl = "https://docs.google.com/spreadsheets/d/1ZuwyBdel75zj_FMJXHtOa4c5AG86W111YwvEQCje-KM/pub?gid=0&single=true&output=csv";
+// Toggle Sidebar Function
+function toggleSlidebar() {
+	const sidebarGroup = document.getElementById('slidebar-group');
+    const contentWrapper = document.getElementById('content-wrapper');
+	const overlay = document.getElementById('overlay');
+	const icon = document.getElementById('toggle-icon');
 
-// COLUMN INDEXES: 
-// The TIER 2 counters (Total/Vacant/Occupied) rely on the 'status' (Col 14/index 13).
-// The TIER 3 counters (Occupied Habitable, etc.) rely on flag columns 16, 17, 18, 19 (indices 15, 16, 17, 18).
-const COL = { 
+	// Toggle the active class on the sidebar group and content wrapper
+	const isActive = sidebarGroup.classList.toggle('active');
+    contentWrapper.classList.toggle('shifted');
+	overlay.classList.toggle('active');
+
+	// Toggle the 'rotated' class on the icon element for the visual effect
+    // Default SVG points right (Closed state). We rotate it 180deg to point left (Open state).
+	if (icon) {
+		icon.classList.toggle('rotated', isActive); 
+	}
+}
+
+// NOTE: This is the external Google Sheet URL in CSV format.
+const csvUrl = "https://docs.google.com/spreadsheets/d/1ZuwyBdel75zj_FMJXHtOa4c5AG86W111YwvEQCje-KM/export?format=csv&gid=0";
+
+// Column Indices in the Google Sheet (data starts from row 6, index 5)
+const COL = {
 	station:5, colony:6, department:7, building:8, type:9, number:10, floor:11, plinth:12, status:13,
-	// New Columns for TIER 3 Counters (0-indexed)
-	p4_flag: 15, // Column 16: Occupied Habitable
-	q4_flag: 16, // Column 17: Occupied Non-Habitable
-	r4_flag: 17, // Column 18: Vacant Habitable
-	s4_flag: 18  // Column 19: Vacant Non-Habitable
+	p4_flag: 15, // Occupied Habitable
+	q4_flag: 16, // Occupied Non-Habitable
+	r4_flag: 17, // Vacant Habitable
+	s4_flag: 18 // Vacant Non-Habitable
 };
-const ORDER = ['station','colony','department','building','type','number','floor']; 
+const ORDER = ['station','colony','department','building','type','number','floor'];
 let data = [];
 
 /**
- * Robust CSV parsing:
- * - handles quoted fields with commas
- * - returns array of rows (arrays)
- * - Skips the first 5 rows (data starts from row 6)
- */
+ * Robust CSV parsing: Handles quotes/commas and skips the initial header rows (skips rows 1-5).
+ */
 function parseCSV(text) {
-	// Original robust implementation preserved
-	text = text.replace(/\r/g, ''); 
+	text = text.replace(/\r/g, '');
 	const lines = text.split('\n');
-	
 	const rows = [];
+	// Regex to handle quoted fields containing commas
 	const regex = /(?:"((?:[^"]|"")*)"|([^,]*))(?:,|$)/g;
-	
-	// We expect the row to have at least the S4_FLAG column which is index 18
-	const MIN_COLS = COL.s4_flag; 
+	const MIN_COLS = COL.s4_flag;
 
+	// Start parsing from row 6 (index 5)
 	for (let i = 5; i < lines.length; i++) {
 		const line = lines[i].trim();
 		if (!line) continue;
-		
 		const row = [];
 		let match;
-
 		regex.lastIndex = 0;
 		while ((match = regex.exec(line)) !== null) {
-			// Safety check: break if stuck
 			if (match.index === regex.lastIndex) {
 				if (regex.lastIndex < line.length) { regex.lastIndex++; } else { break; }
 			}
-
 			const raw = (match[1] !== undefined && match[1] !== null) ? match[1].replace(/""/g, '"') : match[2];
 			row.push((raw !== undefined && raw !== null) ? raw.trim() : '');
-
-			// Ensure columns don't explode (e.g., in case of bad formatting)
-			if (row.length > 30) { 
-				console.warn(`CSV Parsing: Too many columns on line ${i+1}. Skipping rest of row.`);
-				break; 
-			}
+			if (row.length > 30) break; // Safety break
 		}
-		
-		// Only push rows that have enough columns AND contain actual data
+		// Ensure the row is long enough and contains some data
 		if (row.length > MIN_COLS && row.some(cell => cell !== '')) {
 			rows.push(row);
 		}
@@ -597,15 +621,17 @@ function parseCSV(text) {
 	return rows;
 }
 
-/* Load CSV and populate first dropdown */
+/**
+ * Loads the CSV data, parses it, initializes the station filter, and updates the display.
+ */
 async function loadCSV() {
 	try {
 		const res = await fetch(csvUrl);
 		if (!res.ok) throw new Error('HTTP ' + res.status);
 		const txt = await res.text();
-		const rows = parseCSV(txt); 
+		const rows = parseCSV(txt);
 
-		// Map raw data array to objects for easier access
+		// Map raw data array to objects for easier access using column keys
 		data = rows.map(r => ({
 			station: r[COL.station] || '',
 			colony: r[COL.colony] || '',
@@ -616,208 +642,150 @@ async function loadCSV() {
 			floor: r[COL.floor] || '',
 			plinth: r[COL.plinth] || '',
 			status: r[COL.status] || '',
-			// Mapping the new flag columns. Default to '0' if null/blank.
-			p4_flag: r[COL.p4_flag] || '0', 
+			p4_flag: r[COL.p4_flag] || '0',
 			q4_flag: r[COL.q4_flag] || '0',
 			r4_flag: r[COL.r4_flag] || '0',
 			s4_flag: r[COL.s4_flag] || '0'
 		}));
 
-		// Populate the initial 'station' dropdown and enable it
 		const stations = getUniqueFilteredValues(data, 'station');
 		populateDropdown('station', stations);
 		document.getElementById('station').disabled = false;
 		
-		// Show all results and summary counters immediately on load
 		updateSummaryCounters();
 		showResults();
 
 	} catch (err) {
 		console.error('Failed to load CSV:', err);
-		// Display user-facing error message
 		document.getElementById('results').innerHTML = '<div class="empty">Error loading sheet CSV. Please ensure the Google Sheet is published to web as CSV and the link is correct.</div>';
 	}
 }
 
 /**
- * Populates a select dropdown with options.
- */
+ * Fills a <select> element with unique values.
+ */
 function populateDropdown(id, items) {
 	const sel = document.getElementById(id);
-	// Preserve current selection if it exists in the new list, otherwise reset
-	const currentValue = sel.value; 
-	
+	const currentValue = sel.value;
 	sel.innerHTML = '<option value="">-- Select --</option>';
-	
 	items.forEach(v => {
 		const o = document.createElement('option');
 		o.value = v;
 		o.textContent = v;
 		sel.appendChild(o);
 	});
-	
-	// Attempt to restore the previous value
 	if (items.includes(currentValue)) {
 		sel.value = currentValue;
 	} else {
-		sel.value = ''; // Reset if old value is not in new list
+		sel.value = '';
 	}
-	
-	sel.disabled = items.length === 0;
+	// Only disable if no items are available AND it's not the initial 'station' filter
+	sel.disabled = items.length === 0 && id !== 'station';
 }
 
 /**
- * Gets a subset of data filtered by all current selections up to the last one.
- */
+ * Filters the main data array based on current dropdown selections.
+ */
 function getFilteredData() {
 	let res = data.slice();
-	
-	// 1. Filter based on dropdowns (cascading logic)
 	for (const k of ORDER) {
-		// Get the value from the element, or empty string if not found/selected
 		const v = (document.getElementById(k) && document.getElementById(k).value) || '';
-		
 		if (v) {
-			// Filter data based on the selection (case-insensitive, trimmed comparison)
+			// Case-insensitive, trimmed comparison
 			res = res.filter(r => (r[k] || '').toString().trim().toLowerCase() === v.toString().trim().toLowerCase());
 		}
 	}
-	
 	return res;
 }
 
 /**
- * Collects unique, sorted, and cleaned values for a specific column key from a dataset.
- * * FIX: Filters out purely numeric strings from categorical fields.
- */
-function getUniqueFilteredValues(dataset, colKey) {
-	// 1. Map to column value, trim whitespace
-	const values = dataset.map(r => (r[colKey]||'').trim());
+ * Checks if a flag value (P4, Q4, R4, S4) is considered 'active' (1 or Yes).
+ */
+function isFlagActive(flagValue) {
+	const val = (flagValue || '').toString().trim().toLowerCase();
+	return val === '1' || val === 'yes';
+}
 
-	// 2. Filter out empty strings and get unique set
+/**
+ * Gets unique values for a column from a dataset.
+ */
+function getUniqueFilteredValues(dataset, colKey) {
+	const values = dataset.map(r => (r[colKey]||'').trim());
 	let uniqueValues = Array.from(new Set(values.filter(Boolean)));
 	
-	// 3. Conditional data cleaning for categorical fields
-	if (['station', 'colony', 'department', 'building', 'type', 'floor'].includes(colKey)) {
-		uniqueValues = uniqueValues.filter(v => {
-			// A simple check: if the entire string is parseable as a finite number, exclude it.
-			return isNaN(v.trim()) || v.length > 5;
-		});
-	}
-
-	// 4. Sort them alphabetically
+	// Sort case-insensitively
 	uniqueValues.sort((a,b)=>a.localeCompare(b,'en',{sensitivity:'base'}));
-	
 	return uniqueValues;
 }
 
 /**
- * Helper function to check if a flag column indicates "Yes" or active status (i.e., '1', or 'yes').
- */
-function isFlagActive(flagValue) {
-	const val = (flagValue || '').toString().trim().toLowerCase();
-	// Check for both string "yes" and numeric "1" (the assumed flag values)
-	return val === '1' || val === 'yes';
-}
-
-
-/**
- * Calculates and updates the Total, Vacant, and Occupied summary counters based on all current filters.
- */
+ * Updates all Tier 2 (Total, Vacant, Occupied) and Tier 3 (P4/Q4/R4/S4) summary counters.
+ */
 function updateSummaryCounters() {
-	// Get all data filtered by current selections (or all data if no selections)
-	const subset = getFilteredData(); 
-	
+	const subset = getFilteredData();
 	let vacantCount = 0;
 	let occupiedCount = 0;
-	
-	// TIER 3: P4/Q4/R4/S4 counters initialization
-	let p4Count = 0; // Occupied Habitable (Col 16)
-	let q4Count = 0; // Occupied Non-Habitable (Col 17)
-	let r4Count = 0; // Vacant Habitable (Col 18)
-	let s4Count = 0; // Vacant Non-Habitable (Col 19)
-
+	let p4Count = 0, q4Count = 0, r4Count = 0, s4Count = 0;
 
 	subset.forEach(r => {
 		const status = (r.status || '').toLowerCase();
-		
 		const isVacant = status.includes('vacant');
 		const isOccupied = status.includes('occupied');
 		
-		// TIER 2 Counts (Total/Vacant/Occupied) - based on status
-		if (isVacant) {
-			vacantCount++;
-		} else if (isOccupied) {
-			occupiedCount++;
-		}
+		if (isVacant) vacantCount++;
+		else if (isOccupied) occupiedCount++;
 		
-		// TIER 3 Counts (P4/Q4/R4/S4 logic) - COUNTS ONLY THE ROWS WHERE THE FLAG IS '1' OR 'YES'
-		if (isFlagActive(r.p4_flag)) {
-			p4Count++;
-		}
-		if (isFlagActive(r.q4_flag)) {
-			q4Count++;
-		}
-		if (isFlagActive(r.r4_flag)) {
-			r4Count++;
-		}
-		if (isFlagActive(r.s4_flag)) {
-			s4Count++;
-		}
+		// Tier 3 Flags (P4, Q4, R4, S4)
+		if (isFlagActive(r.p4_flag)) p4Count++;
+		if (isFlagActive(r.q4_flag)) q4Count++;
+		if (isFlagActive(r.r4_flag)) r4Count++;
+		if (isFlagActive(r.s4_flag)) s4Count++;
 	});
 
 	const totalCount = vacantCount + occupiedCount;
-	// Note: The sum of TIER 3 counters should equal TIER 2 Total, assuming exactly one flag is '1'/'yes' per record.
 
-	// Update the TIER 2 displays
+	// Tier 2 Update
 	document.getElementById('total-value').textContent = totalCount;
-	document.getElementById('vacant-value').textContent = vacantCount; 
+	document.getElementById('vacant-value').textContent = vacantCount;
 	document.getElementById('occupied-value').textContent = occupiedCount;
 	
-	// Update the TIER 3 (New) displays
+	// Tier 3 Slidebar Update
 	document.getElementById('p4-value').textContent = p4Count;
-	document.getElementById('q4-value').textContent = q4Count; 
+	document.getElementById('q4-value').textContent = q4Count;
 	document.getElementById('r4-value').textContent = r4Count;
 	document.getElementById('s4-value').textContent = s4Count;
 }
 
-
-/* When user changes a dropdown, propagate the filter effect */
+/**
+ * Filters and populates the dropdowns that follow the currently changed dropdown.
+ */
 function filterNext(currentId) {
 	const curIdx = ORDER.indexOf(currentId);
-	
-	// 1. Get the current subset of data based on ALL current filter values.
 	const subset = getFilteredData();
 	
-	// 2. Iterate and populate/disable subsequent dropdowns (cascading logic)
+	// Reset/repopulate subsequent dropdowns
 	for (let i = curIdx + 1; i < ORDER.length; i++) {
 		const nextId = ORDER[i];
 		const nextEl = document.getElementById(nextId);
-		
 		if (nextEl) {
-			// Find unique values for the next filter column from the current subset
 			const values = getUniqueFilteredValues(subset, nextId);
 			populateDropdown(nextId, values);
-			
-			// If the next dropdown has values, keep it enabled.
-			// If the current selection results in no options for the next one, it gets disabled in populateDropdown.
 			if(values.length === 0) {
 				nextEl.value = '';
 			}
 		}
 	}
-
-	// 3. Update summary counters based on the new full filter set
-	updateSummaryCounters(); 
 	
-	// 4. Show results based on the new full filter set
+	// Update counters and results based on new filters
+	updateSummaryCounters();
 	showResults();
 }
 
-/* Show results based on current selections (now a table/grid format) */
+/**
+ * Generates and displays the results table.
+ */
 function showResults() {
-	// Filter data using all current selections
-	const rows = getFilteredData(); 
+	const rows = getFilteredData();
 	const out = document.getElementById('results');
 	out.innerHTML = '';
 	
@@ -826,10 +794,9 @@ function showResults() {
 		return;
 	}
 	
-	// Wrap the table in a scroll container for mobile responsiveness
 	let html = '<div id="results-scroll-container"><div class="results-table">';
 	
-	// 1. Table Header (8 columns) - This row is now visible by default due to CSS changes
+	// Table Header (Sticky)
 	html += '<div class="table-header">';
 	html += '<div class="table-cell header-cell">Station</div>';
 	html += '<div class="table-cell header-cell">Colony</div>';
@@ -841,17 +808,14 @@ function showResults() {
 	html += '<div class="table-cell header-cell">Status</div>';
 	html += '</div>';
 
-	// 2. Data Rows
+	// Table Rows
 	rows.forEach((r, index) => {
 		const statusText = r.status || 'N/A';
 		const isVacant = (statusText.toLowerCase().includes('vacant'));
-		
 		const rowClass = index % 2 === 0 ? 'even-row' : 'odd-row';
 		const statusClass = isVacant ? 'status-vacant' : 'status-occupied';
 
 		html += `<div class="table-row ${rowClass}">`;
-		
-		// Data Cells (8 columns)
 		html += `<div class="table-cell">${r.station || '-'}</div>`;
 		html += `<div class="table-cell">${r.colony || '-'}</div>`;
 		html += `<div class="table-cell">${r.department || '-'}</div>`;
@@ -860,57 +824,55 @@ function showResults() {
 		html += `<div class="table-cell">${r.number || '-'}</div>`;
 		html += `<div class="table-cell">${r.floor || '-'}</div>`;
 		html += `<div class="table-cell ${statusClass}">${statusText}</div>`;
-		
 		html += '</div>';
 	});
-	
-	html += '</div></div>'; // Close results-table and scroll-container
+	html += '</div></div>';
 	out.innerHTML = html;
 }
 
-/* Clear all selections & reset dropdowns */
+/**
+ * Resets all filters to their initial state.
+ */
 function clearAll() {
-	// Reset all dropdowns
+	// Reset all dropdowns except 'station' back to their default disabled state
 	ORDER.forEach(id => {
 		const sel = document.getElementById(id);
-		if (sel) { 
-			sel.value = ''; 
+		if (sel) {
+			sel.value = '';
 			if (id !== 'station') {
-				sel.innerHTML = '<option value="">-- Select --</option>'; 
-				sel.disabled = true; 
+				sel.innerHTML = '<option value="">-- Select --</option>';
+				sel.disabled = true;
 			}
 		}
 	});
 	
-	// Ensure the main filter is enabled
+	// Re-enable and repopulate the primary filter
 	const stationEl = document.getElementById('station');
 	if (stationEl) stationEl.disabled = false;
-	
-	// Re-populate station list to ensure it reflects the fixed filtering
 	const stations = getUniqueFilteredValues(data, 'station');
 	populateDropdown('station', stations);
-
-	// Reset the display to show ALL data
-	updateSummaryCounters(); 
+	
+	// Update UI
+	updateSummaryCounters();
 	showResults();
 }
 
-/* Wire events for cascading and clear button */
+/**
+ * Wires up event listeners for filter changes and the clear button.
+ */
 function wireEvents() {
-	// 1. Wire cascading filter changes
+	// Attach change listener to all filter dropdowns
 	ORDER.forEach(id => {
 		const el = document.getElementById(id);
 		if (el) {
-			// Use an anonymous function to pass the currentId for filtering
 			el.addEventListener('change', () => filterNext(id));
 		}
 	});
-
-	// 2. Wire clear button using listener (best practice)
+	// Attach click listener to the clear button
 	document.getElementById('clear-button').addEventListener('click', clearAll);
 }
 
-// Initialize on load
+// Initialize the application
 wireEvents();
 loadCSV();
 </script>
