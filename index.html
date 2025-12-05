@@ -7,8 +7,7 @@
 <style>
 /* Define CSS variables for easier layout management */
 :root {
-	/* Increased to accommodate the slightly larger, more readable Tier 2 bar */
-	--fixed-header-height: 105px; 
+	--fixed-header-height: 120px; 
     --max-content-width: 650px; 
     --slidebar-width: 250px;
     --toggle-width: 40px;
@@ -88,10 +87,10 @@ body {
 /* --- TIER 2: Counters Section (Summary Bar: Total/Vacant/Occupied) */
 .summary-counters-bar {
 	display: flex;
-	justify-content: space-between;
+	/* Ensures all counters take up equal width */
+	justify-content: space-around; 
 	gap: 10px;
-	/* Increased padding for better vertical spacing */
-	padding: 12px 25px; 
+	padding: 8px 25px; 
 	background: #fff;
 }
 
@@ -227,21 +226,13 @@ body {
 	text-transform: uppercase;
 }
 
-
-/* Sidebar Boxes (Vertical Stack) */
+/* --- SLIDEBAR PANEL CONTENT (Tier 3 Counters) --- */
 .slidebar-content {
-	display: flex;
-	flex-direction: column;
-	gap: 15px;
+    /* Use flex container for consistent vertical spacing (Gap) */
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* Set the gap/spacing between counters (12px) */
 }
-.slidebar-content .summary-box {
-	padding: 15px;
-	min-height: 60px;
-}
-.slidebar-content .summary-label {
-	font-size: 12px;
-}
-
 
 /* --- CONTENT WRAPPER: Shifts when the sidebar is open --- */
 #content-wrapper {
@@ -272,17 +263,14 @@ body {
     margin-bottom: 15px;
 }
 
-/* Filter Card Header and Title Styling (REVERTED) */
+/* Filter Card Header and Title Styling */
 .filter-header {
 	display: flex;
-	/* ALIGNMENT CHANGE: Center the contents horizontally */
 	justify-content: center; 
 	align-items: center;
 	margin-bottom: 15px;
 	padding-bottom: 10px;
 	border-bottom: 1px solid #e0e0e0;
-    
-    /* Removed padding-left from previous version */
     padding-left: 0; 
 }
 .filter-title {
@@ -322,15 +310,18 @@ select:disabled {
 
 /* --- Summary Box Styles --- */
 .summary-box {
+	/* The flex-grow ensures the counters take up available space equally */
 	flex-grow: 1;
+	/* Ensures all counters are rendered identically in size */
+	flex-basis: 0; 
+	
 	display: flex;
-	flex-direction: row;
-	justify-content: space-between;
-	align-items: center;
-	/* Adjusted vertical padding to fit naturally with the new padding on the bar */
-	padding: 2px 10px; 
-	border-radius: 8px;
+	flex-direction: column; /* Stack label and value vertically */
+	justify-content: center; /* Center vertically */
+	align-items: center; /* Center horizontally */
+	
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	border-radius: 18px; 
 }
 
 /* Tier 2 Colors */
@@ -338,32 +329,84 @@ select:disabled {
 .summary-box.red-summary { background: #DC3545; color: white; }
 .summary-box.green-summary { background: #28A745; color: white; }
 
-/* Tier 3 Colors (Sidebar) */
+/* ------------------------------------------------------------------ */
+/* --- TIER 3 Specific Overrides (Slidebar Counters: Size, Shape, Gap) --- */
+/* ------------------------------------------------------------------ */
+.slidebar-content .summary-box {
+    /* Shape: Larger, more modern rounded corners */
+    border-radius: 16px; 
+    /* Size: Increased padding for a larger target */
+    padding: 16px 20px;
+    
+    /* Layout: Row to display label/value side-by-side */
+    flex-direction: row; 
+    justify-content: space-between;
+    align-items: center;
+    
+    /* Add subtle shadow for depth (optional but nice) */
+    box-shadow: 0 2px 5px rgba(33, 33, 33, 0.1); 
+    
+    /* Ensure no margins are interfering with the parent's gap */
+    margin: 0; 
+}
+
+/* Tier 3 Colors */
 .summary-box.oh-summary { background: #D4EDBC; color: #14532d; } 
 .summary-box.onh-summary { background: #D4EDBC; color: #14532d; } 
 .summary-box.vh-summary { 
-    background: #FFCFC9; /* Vacant Habitable (FFCFC9) */
+    background: #FFCFC9; 
     color: #A00000; 
 } 
 .summary-box.vnh-summary { 
-    background: #FFCFC9; /* Vacant Non-Habitable (FFCFC9) */
+    background: #FFCFC9; 
     color: #A00000; 
 } 
 
-/* Values */
-.summary-label { flex-basis: 60%; font-weight: 600; font-size: 10px; line-height: 1.1; text-align: left;}
-.summary-value { flex-basis: 40%; font-size: 24px; font-weight: 900; text-align: right;}
+/* Values - Generic Styles */
+.summary-label { font-weight: 600; line-height: 1.1;}
+.summary-value { font-weight: 900; }
 
-/* --- TIER 2 Specific Overrides (IMPROVED READABILITY) --- */
-#total-count-container, #vacant-count, #occupied-count { min-height: initial; }
-/* Increased font sizes to improve readability */
-.summary-counters-bar .summary-label { 
-    font-size: 13px; /* Increased from 11px */
+/* Tier 3 Label and Value Size */
+.slidebar-content .summary-label { 
+    font-size: 14px; 
     font-weight: 700;
 }
-.summary-counters-bar .summary-value { 
-    font-size: 24px; /* Increased from 20px */
+.slidebar-content .summary-value { 
+    font-size: 24px; 
+    font-weight: 900; 
 }
+
+/* ------------------------------------------------------------------ */
+/* --- TIER 2 Specific Overrides (Uniform Size, Pill Corners, Centered Text) --- */
+/* ------------------------------------------------------------------ */
+.summary-counters-bar .summary-box {
+    /* 1. Pill shape (100% rounded corners) */
+    border-radius: 9999px; 
+    /* 2. Set minimum height for uniform size */
+    min-height: 80px; 
+    /* 3. Ensure content is vertically and horizontally centered (already set above, reinforced here) */
+    justify-content: center; 
+    align-items: center;
+    text-align: center;
+    padding: 8px 15px; 
+}
+
+/* Tier 2 Label (Heading) Styling - Increased size and boldness */
+.summary-counters-bar .summary-label { 
+    font-size: 14px; 
+    font-weight: 800; 
+    line-height: 1.2;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Tier 2 Value Styling */
+.summary-counters-bar .summary-value { 
+    font-size: 28px; 
+    font-weight: 900; 
+}
+
 
 button.action-btn {
 	display: block;
@@ -441,31 +484,36 @@ button.action-btn {
     }
 	.header-title-text { font-size: 18px; }
 	
-    /* ---------------------------------------------------- */
-    /* --- TIER 2 COUNTER HEIGHT ADJUSTMENT (2X Height) --- */
-    /* ---------------------------------------------------- */
+    /* TIER 2 COUNTER ADJUSTMENTS FOR MOBILE */
 	.summary-counters-bar { 
-        /* Increased vertical padding from 8px to 15px */
         padding: 15px 8px; 
         gap: 5px; 
     } 
-    .summary-box {
-        /* Increased internal vertical padding from 1px to 4px */
-        padding: 4px 4px; 
+    .summary-counters-bar .summary-box {
+        min-height: 70px; /* Slightly smaller height on mobile for compactness */
+        padding: 6px 10px; 
     }
-    /* Font size remains optimized for mobile readability */
-    .summary-counters-bar .summary-label { font-size: 10px; } 
-    .summary-counters-bar .summary-value { font-size: 20px; } 
+    .summary-counters-bar .summary-label { 
+        font-size: 12px; 
+    } 
+    .summary-counters-bar .summary-value { 
+        font-size: 24px; 
+    } 
 
 	.sticky-filter-wrapper, #results { padding: 0 15px; max-width: none; }
-	.sticky-filter-wrapper { margin-top: var(--fixed-header-height); }
+	
+    /* Move Filter Quarters text/card down by 10px */
+    .sticky-filter-wrapper { 
+        margin-top: calc(var(--fixed-header-height) + 10px); 
+    }
+
 	.results-table { border-radius: 8px; }
 	
 	/* Results Table Compression */
 	.table-cell { font-size: 10px; padding: 6px 3px; }
 	.header-cell { font-size: 9px; padding: 8px 3px; border-right: 1px solid #4169E1;}
 	
-	/* --- SIDEBAR FIXES FOR MOBILE CLICKABILITY --- */
+	/* --- SIDEBAR FIXES FOR MOBILE CLICKABILITY AND VISIBILITY --- */
 	.slidebar-group {
         /* Anchor to top of viewport and full height */
         top: 0; 
@@ -474,9 +522,10 @@ button.action-btn {
 		margin-left: 0;
         transform: translateX(calc(-1 * var(--slidebar-width)));
 	}
-    /* Shift the toggle button down to sit below the fixed header, plus an additional 20px (from last request) */
+    
+    /* Move Arrow/Toggle Button down by an additional 10px (40px total) */
     #sidebar-toggle {
-        margin-top: calc(var(--fixed-header-height) + 20px); 
+        margin-top: calc(var(--fixed-header-height) + 40px); 
         cursor: pointer;
     }
     
@@ -505,25 +554,21 @@ button.action-btn {
             <!-- P4: Occupied Habitable -->
             <div id="p4-count" class="summary-box oh-summary">
                 <div class="summary-label">OCCUPIED HABITABLE</div>
-                <!-- FIX: Added ID 'p4-value' for JavaScript to update -->
                 <div id="p4-value" class="summary-value">0</div> 
             </div>
             <!-- Q4: Occupied Non-Habitable -->
             <div id="q4-count" class="summary-box onh-summary">
                 <div class="summary-label">OCCUPIED NON-HABITABLE</div>
-                <!-- FIX: Added ID 'q4-value' for JavaScript to update -->
                 <div id="q4-value" class="summary-value">0</div>
             </div>
             <!-- R4: Vacant Habitable -->
             <div id="r4-count" class="summary-box vh-summary">
                 <div class="summary-label">VACANT HABITABLE</div>
-                <!-- FIX: Added ID 'r4-value' for JavaScript to update -->
                 <div id="r4-value" class="summary-value">0</div>
             </div>
             <!-- S4: Vacant Non-Habitable -->
             <div id="s4-count" class="summary-box vnh-summary">
                 <div class="summary-label">VACANT NON-HABITABLE</div>
-                <!-- FIX: Added ID 's4-value' for JavaScript to update -->
                 <div id="s4-value" class="summary-value">0</div>
             </div>
         </div>
@@ -573,7 +618,7 @@ button.action-btn {
     <div class="sticky-filter-wrapper">
         <div class="app-container">
             
-            <!-- Filter Card Header with centered Title (No more special padding for the button) -->
+            <!-- Filter Card Header with centered Title -->
             <div class="filter-header">
                 <h2 class="filter-title">Filter Quarters</h2>
             </div>
@@ -621,9 +666,7 @@ function toggleSlidebar() {
     contentWrapper.classList.toggle('shifted');
 	overlay.classList.toggle('active');
 
-	// We still toggle the 'rotated' class on the icon element to ensure the quick 
-    // visual flip (using the transition) happens immediately on click before the 
-    // animation fully takes over.
+	// Toggle the 'rotated' class on the icon element
 	if (icon) {
 		icon.classList.toggle('rotated', isActive); 
 	}
@@ -805,8 +848,7 @@ function updateSummaryCounters() {
 	const totalCount = vacantCount + occupiedCount;
 
 	// Tier 2 Update
-	// Safely update Tier 2 counters
-    if(document.getElementById('total-value')) document.getElementById('total-value').textContent = totalCount;
+	if(document.getElementById('total-value')) document.getElementById('total-value').textContent = totalCount;
     if(document.getElementById('vacant-value')) document.getElementById('vacant-value').textContent = vacantCount;
     if(document.getElementById('occupied-value')) document.getElementById('occupied-value').textContent = occupiedCount;
 
