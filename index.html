@@ -7,10 +7,14 @@
 <style>
 /* Define CSS variables for easier layout management */
 :root {
-	--fixed-header-height: 120px; 
+	/* FIXED: Recalculated height to 131px (50px Tier 1 + 81px Tier 2) to perfectly eliminate the gap 
+       and make the sticky table header (Tier 3) touch the bottom edge of the white counter bar (Tier 2). */
+	--fixed-header-height: 131px; 
     --max-content-width: 650px; 
     --slidebar-width: 250px;
     --toggle-width: 40px;
+    /* Single source of truth for table columns to ensure alignment */
+    --table-columns: 1.2fr 1.2fr 1fr 1fr 1fr 1fr 1fr 1fr;
 }
 
 /* Global Reset: Ensure no default browser margins cause gaps */
@@ -25,18 +29,16 @@ body {
         transform: translateX(0); 
     }
     50% { 
-        transform: translateX(3px); /* Nudge 3px to the right */
+        transform: translateX(3px); 
     }
 }
 
 /* --- ANIMATION KEYFRAMES for Closing Nudge (Arrow points left, nudges left) --- */
 @keyframes nudge-close {
     0%, 100% { 
-        /* Start/end with the 180 degree rotation and no lateral shift */
         transform: rotate(180deg) translateX(0); 
     }
     50% { 
-        /* Nudge 3px to the left, maintaining the 180 degree rotation */
         transform: rotate(180deg) translateX(-3px); 
     }
 }
@@ -93,7 +95,6 @@ body {
 /* --- TIER 2: Counters Section (Summary Bar: Total/Vacant/Occupied) */
 .summary-counters-bar {
 	display: flex;
-	/* Ensures all counters take up equal width */
 	justify-content: space-around; 
 	gap: 10px;
 	padding: 8px 25px; 
@@ -121,14 +122,14 @@ body {
 /* --- SLIDEBAR GROUP: Contains Panel + Toggle (Slides together) --- */
 .slidebar-group {
     position: fixed;
-	top: var(--fixed-header-height); /* Start below the fixed header on desktop/mobile */
+	top: var(--fixed-header-height); /* Now using the corrected 131px */
 	
 	/* Anchor the group to the left edge of the main content area (650px wide) */
 	left: 50%; 
 	margin-left: calc(-1 * (var(--max-content-width) / 2)); 
 	
-	width: calc(var(--slidebar-width) + var(--toggle-width)); 
 	height: calc(100vh - var(--fixed-header-height)); 
+	width: calc(var(--slidebar-width) + var(--toggle-width)); 
 	z-index: 1000; 
 	
 	/* Default HIDDEN state: Hides the panel off-screen, but leaves the toggle visible (40px) */
@@ -156,17 +157,16 @@ body {
 
 /* Style for the button attached to the sliding panel */
 #sidebar-toggle {
-    /* Button is part of the sliding group, positioned right of the panel */
     position: relative; 
     left: 0;
     top: 0;
     
-	background: #28A745; /* Arrow background green */
+	background: #28A745; 
 	border: none;
 	width: var(--toggle-width); 
 	height: var(--toggle-width); 
 	padding: 0; 
-	border-radius: 0 8px 8px 0; /* Only right corners rounded */
+	border-radius: 0 8px 8px 0; 
     box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2); 
 	cursor: pointer;
 	transition: background 0.2s, opacity 0.2s;
@@ -175,22 +175,20 @@ body {
 	align-items: center;
 	line-height: 1;
     
-    /* === FIX: Increased vertical offset for better desktop positioning === */
-    margin-top: 220px; 
+    /* Reduced margin-top slightly for better vertical placement against the fixed header */
+    margin-top: 10px; 
     
     flex-shrink: 0;
     
-    /* FIX: Z-index of 1001 ensures the arrow is on top of the fixed header (100) and the sticky table header (99) */
     z-index: 1001; 
 }
 #sidebar-toggle:hover {
-	background: #1e7e34; /* Darker green on hover */
+	background: #1e7e34; 
 }
 
 /* Arrow Icon Styling (SVG container) */
 #toggle-icon {
 	display: inline-block;
-    /* Transition is crucial for a smooth flip during toggle */
 	transition: transform 0.3s ease-in-out; 
 	line-height: 1;
 }
@@ -198,7 +196,6 @@ body {
 /* 1. Closed state: Apply nudge-open animation (Arrow points right, nudges right) */
 .slidebar-group:not(.active) #toggle-icon {
     animation: nudge-open 1.5s infinite ease-in-out;
-    /* Ensure no rotation is applied by default */
     transform: translateX(0);
 }
 
@@ -210,17 +207,11 @@ body {
 /* Style for the SVG arrow inside the button */
 #toggle-icon svg {
     display: block;
-    stroke: white; /* Arrow color to white */
+    stroke: white; 
     width: 18px; 
     height: 18px;
     position: static;
 }
-
-/* The 'rotated' class is kept for smooth transition fallback */
-#toggle-icon.rotated {
-    transform: rotate(180deg);
-}
-
 
 .slidebar-header {
 	display: flex;
@@ -239,10 +230,9 @@ body {
 
 /* --- SLIDEBAR PANEL CONTENT (Tier 3 Counters) --- */
 .slidebar-content {
-    /* Use flex container for consistent vertical spacing (Gap) */
     display: flex;
     flex-direction: column;
-    gap: 12px; /* Set the gap/spacing between counters (12px) */
+    gap: 12px; 
 }
 
 /* --- CONTENT WRAPPER: Shifts when the sidebar is open --- */
@@ -250,7 +240,6 @@ body {
     transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 #content-wrapper.shifted {
-    /* Shifts the main content to the right by the width of the slidebar panel */
     transform: translateX(var(--slidebar-width)); 
 }
 
@@ -259,8 +248,7 @@ body {
 .sticky-filter-wrapper {
 	max-width: var(--max-content-width);
 	margin: 0 auto;
-	/* Ensures the content starts exactly where the fixed header ends */
-	margin-top: var(--fixed-header-height);
+	margin-top: var(--fixed-header-height); /* Now uses the corrected 131px */
 }
 
 /* --- App Container --- */
@@ -321,15 +309,13 @@ select:disabled {
 
 /* --- Summary Box Styles --- */
 .summary-box {
-	/* The flex-grow ensures the counters take up available space equally */
 	flex-grow: 1;
-	/* Ensures all counters are rendered identically in size */
 	flex-basis: 0; 
 	
 	display: flex;
-	flex-direction: column; /* Stack label and value vertically */
-	justify-content: center; /* Center vertically */
-	align-items: center; /* Center horizontally */
+	flex-direction: column; 
+	justify-content: center; 
+	align-items: center; 
 	
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 	border-radius: 18px; 
@@ -344,20 +330,14 @@ select:disabled {
 /* --- TIER 3 Specific Overrides (Slidebar Counters: Size, Shape, Gap) --- */
 /* ------------------------------------------------------------------ */
 .slidebar-content .summary-box {
-    /* Shape: Larger, more modern rounded corners */
     border-radius: 16px; 
-    /* Size: Increased padding for a larger target */
     padding: 16px 20px;
     
-    /* Layout: Row to display label/value side-by-side */
     flex-direction: row; 
     justify-content: space-between;
     align-items: center;
     
-    /* Add subtle shadow for depth (optional but nice) */
     box-shadow: 0 2px 5px rgba(33, 33, 33, 0.1); 
-    
-    /* Ensure no margins are interfering with the parent's gap */
     margin: 0; 
 }
 
@@ -391,21 +371,17 @@ select:disabled {
 /* --- TIER 2 Specific Overrides (Smaller Size, Small Rounded Corners, Centered Text) --- */
 /* ------------------------------------------------------------------ */
 .summary-counters-bar .summary-box {
-    /* 1. Small rounded corners (e.g., 10px) */
     border-radius: 10px; 
-    /* 2. Smaller minimum height */
     min-height: 65px; 
-    /* 3. Ensure content is vertically and horizontally centered */
     justify-content: center; 
     align-items: center;
     text-align: center;
-    /* Reduced padding */
     padding: 5px 10px; 
 }
 
 /* Tier 2 Label (Heading) Styling - Adjusted for smaller size */
 .summary-counters-bar .summary-label { 
-    font-size: 12px; /* Reduced from 14px */
+    font-size: 12px; 
     font-weight: 800; 
     line-height: 1.2;
     opacity: 0.9;
@@ -415,7 +391,7 @@ select:disabled {
 
 /* Tier 2 Value Styling - Adjusted for smaller size */
 .summary-counters-bar .summary-value { 
-    font-size: 24px; /* Reduced from 28px */
+    font-size: 24px; 
     font-weight: 900; 
 }
 
@@ -444,16 +420,14 @@ button.action-btn:disabled {
 #results { 
     max-width: var(--max-content-width); 
     margin: 0 auto; 
-    /* Ensure no padding on the container that holds the table */
     padding: 0;
 }
 
 .results-table {
     /* Use display: block on the wrapper to allow position: sticky to work reliably */
 	display: grid;
-    /* This ensures the grid itself spans the container width */
-    width: 100%;
-	grid-template-columns: 1.2fr 1.2fr 1fr 1fr 1fr 1fr 1fr 1fr;
+    /* Use CSS variable for column definition */
+	grid-template-columns: var(--table-columns);
 	gap: 1px;
 	background-color: #e0e0e0;
 	border-radius: 10px;
@@ -464,22 +438,21 @@ button.action-btn:disabled {
 .table-header {
 	grid-column: 1 / -1; /* Span all columns in the grid */
 	display: grid;
-	grid-template-columns: 1.2fr 1.2fr 1fr 1fr 1fr 1fr 1fr 1fr;
+	/* Use CSS variable for column definition */
+	grid-template-columns: var(--table-columns);
 	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 	position: sticky;
     
-    /* KEY FIX: Position the sticky header exactly at the bottom of the fixed header group */
-	top: var(--fixed-header-height);
+    /* DESKTOP/DEFAULT: Offset by 15px from the sticky header group */
+	top: calc(var(--fixed-header-height) + 15px); 
     
 	background-color: #4169E1;
-	
-    /* FIX: Decreased z-index to 99 so it sticks UNDER the fixed header (100) and the toggle (1001) */
-	z-index: 99;
     
-    /* KEY FIX: Explicitly setting width to 100% when sticky to prevent collapse */
+    /* Increased Z-INDEX to 110 to ensure it is above the main fixed header group (z-index: 100) */
+	z-index: 110; 
+    
+    /* Global width setting - should be 100% of the grid container */
     width: 100%; 
-    /* Overwrite grid-gap within the header itself */
-    gap: 0; 
 }
 .table-row { display: contents; }
 .table-cell {
@@ -496,12 +469,15 @@ button.action-btn:disabled {
 	background-color: #4169E1;
 	font-weight: 700;
 	text-transform: uppercase;
-	padding: 15px 8px;
+    
+    /* Reduced vertical padding by more than 2x and applied top-only padding principle */
+	padding: 10px 8px 5px 8px; 
+    
 	font-size: 12px;
 	position: relative;
-	/* The individual header cells need the lower z-index too */
-	z-index: 100; 
-	border-right: 2px solid #4169E1;
+	z-index: 106; 
+    /* Vertical divider remains white */
+	border-right: 2px solid white;
 }
 /* Apply corner radius to the header cells based on the table's container radius */
 .table-header .header-cell:first-child { border-top-left-radius: 10px; }
@@ -514,17 +490,11 @@ button.action-btn:disabled {
 
 /* Mobile Adaptations (Responsive View) */
 @media (max-width: 680px) {
-    /* FIX: REDEFINE FIXED HEADER HEIGHT FOR MOBILE */
-    :root {
-        --fixed-header-height: 160px; 
-    }
-    
-	/* General Layout */
+    /* General Layout */
 	body { padding: 0 0 15px 0; }
 	.sticky-header-group-outer { 
         width: 100%; 
         border-radius: 0; 
-        /* Ensure the fixed element uses the full width */
         left: 0; 
         transform: none;
     }
@@ -536,39 +506,58 @@ button.action-btn:disabled {
         gap: 5px; 
     } 
     .summary-counters-bar .summary-box {
-        min-height: 60px; /* Smaller height on mobile */
+        min-height: 60px; 
         padding: 6px 10px; 
     }
     .summary-counters-bar .summary-label { 
-        font-size: 11px; /* Smaller font on mobile */
+        font-size: 11px; 
     } 
     .summary-counters-bar .summary-value { 
-        font-size: 20px; /* Smaller font on mobile */
+        font-size: 20px; 
     } 
 
 	.sticky-filter-wrapper, #results { max-width: none; }
 	
-    /* Content wrapper margin starts exactly where the FIXED header ends */
+    /* Content wrapper margin starts exactly where the FIXED header ends (131px) */
     .sticky-filter-wrapper { 
         margin-top: var(--fixed-header-height); 
-        padding: 0 15px;
+        padding: 0 15px; /* Applies padding to the filter card */
+    }
+    
+    /* Apply horizontal padding to the results container to define the boundaries of the table */
+    #results { 
+        max-width: none; 
+        padding: 0 15px; 
     }
 
 	.results-table { border-radius: 8px; }
 	
 	/* Results Table Compression */
 	.table-cell { font-size: 10px; padding: 6px 3px; }
-	.header-cell { font-size: 9px; padding: 8px 3px; border-right: 1px solid #4169E1;}
+	.header-cell { 
+        font-size: 9px; 
+        /* Reduced vertical padding by more than 2x and applied top-only padding principle */
+        padding: 5px 3px 2px 3px; 
+        /* Vertical divider remains white */
+        border-right: 1px solid white;
+    }
 	
-    /* === NEW FIX: Override sticky table header position for mobile === */
-    /* Moves the header down 20px further (160px + 20px = 180px) */
+	/* Ensure the last mobile header cell has no right border, fixing the right-side gap/artifact */
+    .table-header .header-cell:last-child { 
+        border-right: none; 
+    }
+    
+	/* --- CRITICAL STICKY HEADER FIX FOR MOBILE PADDING --- */
     .table-header {
-        top: 180px; 
+        /* ADJUSTED: Moving up 30px from the previous 65px offset (65px - 30px = 35px) */
+        top: calc(var(--fixed-header-height) + 35px); 
+        left: 0; /* Resetting left to 0 */
+        width: 100%; /* Spans 100% of the parent grid container */
+        box-sizing: border-box; 
     }
     
 	/* --- SIDEBAR FIXES FOR MOBILE CLICKABILITY AND VISIBILITY --- */
 	.slidebar-group {
-        /* FIX 1: Anchor the sidebar group *below* the fixed header (160px) */
         top: var(--fixed-header-height); 
         height: calc(100vh - var(--fixed-header-height));
 		left: 0; 
@@ -576,9 +565,9 @@ button.action-btn:disabled {
         transform: translateX(calc(-1 * var(--slidebar-width)));
 	}
     
-    /* FIX 2: Reduce the margin-top to position the toggle just below the sticky header when locked */
+    /* Mobile toggle margin reduced for correct placement */
     #sidebar-toggle {
-        margin-top: 60px; 
+        margin-top: 10px; 
         cursor: pointer;
     }
     
@@ -892,7 +881,7 @@ function isFlagActive(flagValue) {
 function getUniqueFilteredValues(dataset, colKey) {
 	const values = dataset.map(r => (r[colKey]||'').trim());
 	
-    // FIX APPLIED HERE: Must use 'new Set' constructor
+    // Must use 'new Set' constructor
 	let uniqueValues = Array.from(new Set(values.filter(Boolean)));
 	
 	// Sort case-insensitively
